@@ -15,12 +15,10 @@ class MainWindow(Gtk.Window):
         self.connect("destroy", Gtk.main_quit)
         self.resize(400, 400)
 
-        self.box = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
+        self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.add(self.box)
 
         self.spinner = Gtk.Spinner()
-
-        self.show_loading(True)
 
         self.bulbs_combo = Gtk.ComboBoxText()
         self.bulbs_combo.set_entry_text_column(0)
@@ -30,9 +28,10 @@ class MainWindow(Gtk.Window):
         self.bulb_ip = None
         self.bulb = None
 
-        self.show_all()
-
         self.init_control_layout()
+
+        self.show_loading(True)
+        self.show_all()
 
         thread = threading.Thread(target=self.discovery)
         thread.daemon = True
@@ -47,6 +46,11 @@ class MainWindow(Gtk.Window):
         self.control_box.pack_start(self.status_label, False, False, 0)
         self.control_box.pack_start(self.toggle_button, False, False, 0)
 
+        self.brightness_slider = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL,
+                                           adjustment=Gtk.Adjustment(lower=1, upper=100, step_increment=1))
+        self.control_box.pack_start(self.brightness_slider, False, False, 0)
+        self.brightness_slider.connect("button-release-event", self.change_brightness)
+
     def toggle_bulb(self, widget):
         self.bulb.toggle()
         self.update_status()
@@ -60,6 +64,8 @@ class MainWindow(Gtk.Window):
 
     def show_loading(self, loading):
         if loading:
+            self.box.remove(self.bulbs_combo)
+            self.box.remove(self.control_box)
             self.spinner.start()
             self.box.pack_start(self.spinner, True, True, 0)
         else:
@@ -74,7 +80,7 @@ class MainWindow(Gtk.Window):
 
         self.show_loading(False)
 
-        self.box.pack_start(self.bulbs_combo, False, False, 4)
+        self.box.pack_start(self.bulbs_combo, False, False, 0)
         self.box.pack_start(self.control_box, True, True, 0)
         self.show_all()
 
@@ -87,8 +93,17 @@ class MainWindow(Gtk.Window):
             self.bulb = Bulb(self.bulb_ip)
             self.update_status()
 
+    def change_brightness(self, widget, event):
+        bright = self.brightness_slider.get_value()
+        self.bulb.set_brightness(bright)
+        self.update_status()
+
     def update_status(self):
-        self.status_label.set_text('Status: ' + self.bulb.get_properties().get('power'))
+        bulb_properties = self.bulb.get_properties()
+        print(bulb_properties)
+
+        self.status_label.set_text('Status: ' + bulb_properties.get('power'))
+        self.brightness_slider.set_value(int(bulb_properties.get('bright')))
 
 
 win = MainWindow()

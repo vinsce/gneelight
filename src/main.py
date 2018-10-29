@@ -3,7 +3,7 @@ import threading
 import gi
 from yeelight import discover_bulbs, Bulb
 
-from src.constants import *
+from constants import *
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
@@ -23,6 +23,8 @@ class MainWindow(Gtk.Window):
         self.bulbs_combo = Gtk.ComboBoxText()
         self.bulbs_combo.set_entry_text_column(0)
         self.bulbs_combo.connect("changed", self.on_bulb_selected)
+        self.bulbs_combo.set_hexpand(False)
+        self.bulbs_combo.set_halign(Gtk.Align.CENTER)
 
         self.discovered_bulbs = None
         self.bulb_ip = None
@@ -39,6 +41,8 @@ class MainWindow(Gtk.Window):
 
     def init_control_layout(self):
         self.control_box = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
+        self.control_box.set_margin_start(16)
+        self.control_box.set_margin_end(16)
 
         self.status_label = Gtk.Label()
         self.toggle_button = Gtk.Button(label="Toggle")
@@ -67,7 +71,7 @@ class MainWindow(Gtk.Window):
             self.box.remove(self.bulbs_combo)
             self.box.remove(self.control_box)
             self.spinner.start()
-            self.box.pack_start(self.spinner, True, True, 0)
+            self.box.pack_start(self.spinner, True, True, 150)
         else:
             self.spinner.stop()
             self.box.remove(self.spinner)
@@ -77,21 +81,25 @@ class MainWindow(Gtk.Window):
 
         for bulb in self.discovered_bulbs:
             self.bulbs_combo.append_text(bulb.get('ip') + ":" + str(bulb.get('port')))
+        self.bulbs_combo.set_active(0)
 
         self.show_loading(False)
 
-        self.box.pack_start(self.bulbs_combo, False, False, 0)
+        self.box.pack_start(self.bulbs_combo, False, False, 6)
         self.box.pack_start(self.control_box, True, True, 0)
         self.show_all()
 
     def on_bulb_selected(self, combo):
         tree_iter = combo.get_active_iter()
-        if tree_iter is not None:
+        if tree_iter is not None and len(tree_iter)!=0:
             model = combo.get_model()
             self.bulb_ip = model[tree_iter][0].split(':')[0]
             print("Selected: bulb=%s" % self.bulb_ip)
             self.bulb = Bulb(self.bulb_ip)
             self.update_status()
+        else:
+            # TODO show message to user
+            pass
 
     def change_brightness(self, widget, event):
         bright = self.brightness_slider.get_value()

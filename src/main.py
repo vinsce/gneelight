@@ -10,9 +10,6 @@ from gi.repository import Gtk, Gio
 
 
 # TODO add predefined options
-# TODO use switch to turn on/off and status
-# TODO add refresh button in header bar
-# TODO use list box
 # TODO add bulb info section
 # TODO add delay off option
 
@@ -56,23 +53,31 @@ class MainWindow(Gtk.Window):
         self.start_discovery()
 
     def init_control_layout(self):
-        self.control_box = Gtk.Box(spacing=6, orientation=Gtk.Orientation.VERTICAL)
-        self.control_box.set_margin_start(16)
-        self.control_box.set_margin_end(16)
+        self.control_box = Gtk.ListBox()
+        self.control_box.set_selection_mode(Gtk.SelectionMode.NONE)
+        row = BulbOptionRow()
 
-        self.status_label = Gtk.Label()
-        self.toggle_button = Gtk.Button(label="Toggle")
-        self.toggle_button.connect("clicked", self.toggle_bulb)
-        self.control_box.pack_start(self.status_label, False, False, 0)
-        self.control_box.pack_start(self.toggle_button, False, False, 0)
+        self.power_switch = Gtk.Switch()
+        self.power_switch.props.valign = Gtk.Align.CENTER
+        self.power_switch.connect('state-set', self.toggle_bulb)
 
-        self.brightness_slider = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL,
-                                           adjustment=Gtk.Adjustment(lower=1, upper=100, step_increment=1))
-        self.control_box.pack_start(self.brightness_slider, False, False, 0)
+        row.set_content(Gtk.Label(label="Power", xalign=0), self.power_switch, control_expand=False)
+
+        self.control_box.add(row)
+
+        row2 = BulbOptionRow()
+        self.brightness_slider = Gtk.Scale.new_with_range(orientation=Gtk.Orientation.HORIZONTAL, min=1, max=100, step=1)
         self.brightness_slider.connect("button-release-event", self.change_brightness)
 
-    def toggle_bulb(self, widget):
-        self.bulb.toggle()
+        row2.set_content(Gtk.Label(label="Brightness", xalign=0), self.brightness_slider)
+
+        self.control_box.add(row2)
+
+    def toggle_bulb(self, widget, status):
+        if status:
+            self.bulb.turn_on()
+        else:
+            self.bulb.turn_off()
         self.update_status()
 
     def on_button_clicked(self, widget):
@@ -134,10 +139,9 @@ class MainWindow(Gtk.Window):
         bulb_properties = self.bulb.get_properties()
         print(bulb_properties)
 
-        self.status_label.set_text('Status: ' + bulb_properties.get('power'))
+        self.power_switch.set_active(bulb_properties.get('power') == 'on')
         self.brightness_slider.set_value(int(bulb_properties.get('bright')))
-        self.status_label.show()
-        self.brightness_slider.show()
+        self.control_box.show_all()
 
     def show_no_result(self):
         no_result_box = Gtk.VBox(homogeneous=False)
@@ -163,6 +167,24 @@ class MainWindow(Gtk.Window):
         thread = threading.Thread(target=self.discovery)
         thread.daemon = True
         thread.start()
+
+
+class BulbOptionRow(Gtk.ListBoxRow):
+    def __init__(self):
+        super().__init__()
+        self.set_size_request(-1, 48)
+
+    def set_content(self, label: Gtk.Label, control: Gtk.Widget, control_expand: bool = True):
+        h_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=64)
+        self.add(h_box)
+        h_box.pack_start(label, False, False, 0)
+        h_box.pack_end(control, control_expand, control_expand, 0)
+        label.set_margin_start(16)
+        control.set_margin_end(16)
+
+        if not control_expand:
+            control.set_halign(Gtk.Align.END)
+        self.show_all()
 
 
 win = MainWindow()

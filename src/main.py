@@ -1,12 +1,20 @@
 import threading
 
-import gi
 from yeelight import discover_bulbs, Bulb
 
+import gi
 from constants import *
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GObject
+from gi.repository import Gtk, Gio
+
+
+# TODO add predefined options
+# TODO use switch to turn on/off and status
+# TODO add refresh button in header bar
+# TODO use list box
+# TODO add bulb info section
+# TODO add delay off option
 
 
 class MainWindow(Gtk.Window):
@@ -19,6 +27,12 @@ class MainWindow(Gtk.Window):
         self.header_bar.set_show_close_button(True)
         self.header_bar.props.title = APP_NAME
         self.set_titlebar(self.header_bar)
+        self.refresh_button = Gtk.Button()
+        icon = Gio.ThemedIcon(name="view-refresh-symbolic")
+        image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+        self.refresh_button.add(image)
+        self.header_bar.pack_end(self.refresh_button)
+        self.refresh_button.connect('clicked', self.start_discovery)
 
         self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.box.set_vexpand(True)
@@ -79,7 +93,7 @@ class MainWindow(Gtk.Window):
         else:
             self.spinner.stop()
             self.box.remove(self.spinner)
-        self.show_all()
+        self.box.show_all()
 
     def discovery(self):
         self.discovered_bulbs = discover_bulbs()
@@ -87,6 +101,8 @@ class MainWindow(Gtk.Window):
         self.show_loading(False)
 
         if len(self.discovered_bulbs) > 0:
+            self.bulbs_combo.remove_all()
+
             for bulb in self.discovered_bulbs:
                 self.bulbs_combo.append_text(bulb.get('ip') + ":" + str(bulb.get('port')))
 
@@ -96,7 +112,7 @@ class MainWindow(Gtk.Window):
             self.box.pack_start(self.control_box, True, True, 0)
         else:
             self.show_no_result()
-        self.show_all()
+        self.box.show_all()
 
     def on_bulb_selected(self, combo):
         tree_iter = combo.get_active_iter()
@@ -120,6 +136,8 @@ class MainWindow(Gtk.Window):
 
         self.status_label.set_text('Status: ' + bulb_properties.get('power'))
         self.brightness_slider.set_value(int(bulb_properties.get('bright')))
+        self.status_label.show()
+        self.brightness_slider.show()
 
     def show_no_result(self):
         no_result_box = Gtk.VBox(homogeneous=False)
@@ -148,4 +166,5 @@ class MainWindow(Gtk.Window):
 
 
 win = MainWindow()
+win.show_all()
 Gtk.main()

@@ -1,6 +1,7 @@
 import threading
 
 from yeelight import discover_bulbs, Bulb
+from yeelight.enums import CronType
 
 from constants import *
 
@@ -77,6 +78,12 @@ class MainWindow(Gtk.Window):
         row2.set_content(Gtk.Label(label="Brightness", xalign=0), self.brightness_slider)
         self.control_box.add(row2)
 
+        row3 = BulbOptionRow()
+        self.delay_spin_button = Gtk.SpinButton.new_with_range(min=0, max=60, step=1)
+        self.delay_spin_button.connect('value-changed', self.change_delay_off)
+        row3.set_content(Gtk.Label(label="Delay off (minutes)", xalign=0), self.delay_spin_button, control_expand=False)
+        self.control_box.add(row3)
+
     # noinspection PyUnusedLocal
     def toggle_bulb(self, widget, status):
         MainWindow.run_in_thread(target=self.toggle_sync, status=status)
@@ -138,6 +145,15 @@ class MainWindow(Gtk.Window):
         self.bulb.set_brightness(brightness=brightness)
         self.update_status()
 
+    def change_delay_off(self, widget):
+        MainWindow.run_in_thread(self.change_delay_off_sync, delay=self.delay_spin_button.get_value())
+
+    def change_delay_off_sync(self, delay):
+        if delay == 0:
+            self.bulb.cron_del(CronType.off)
+        else:
+            self.bulb.cron_add(CronType.off, delay)
+
     def update_status(self):
         MainWindow.run_in_thread(target=self.update_status_sync)
 
@@ -147,6 +163,7 @@ class MainWindow(Gtk.Window):
 
         self.power_switch.set_active(bulb_properties.get('power') == 'on')
         self.brightness_slider.set_value(int(bulb_properties.get('bright')))
+        self.delay_spin_button.set_value(float(bulb_properties.get('delayoff')))
         self.control_box.show_all()
 
     def show_no_result(self):

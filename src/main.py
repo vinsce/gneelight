@@ -3,9 +3,8 @@ import threading
 from yeelight import discover_bulbs, Bulb
 from yeelight.enums import CronType
 
-from constants import *
-
 import gi
+from constants import *
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gio
@@ -13,14 +12,14 @@ from gi.repository import Gtk, Gio
 
 # TODO add predefined options
 # TODO add bulb info section
-# TODO add delay off option
 # TODO add color selection
 
 
 # noinspection PyArgumentList
-class MainWindow(Gtk.Window):
-    def __init__(self):
-        Gtk.Window.__init__(self, title=APP_NAME)
+class MainWindow(Gtk.ApplicationWindow):
+    def __init__(self, *args, **kwargs):
+        Gtk.Window.__init__(self,  *args, **kwargs)
+
         self.connect("destroy", Gtk.main_quit)
         self.set_default_size(400, 400)
 
@@ -28,6 +27,8 @@ class MainWindow(Gtk.Window):
         self.header_bar.set_show_close_button(True)
         self.header_bar.props.title = APP_NAME
         self.set_titlebar(self.header_bar)
+        self.set_hide_titlebar_when_maximized(False)
+        self.set_decorated(True)
         self.refresh_button = Gtk.Button()
         icon = Gio.ThemedIcon(name="view-refresh-symbolic")
         image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
@@ -223,8 +224,3 @@ class BulbOptionRow(Gtk.ListBoxRow):
         if not control_expand:
             control.set_halign(Gtk.Align.END)
         self.show_all()
-
-
-win = MainWindow()
-win.show_all()
-Gtk.main()

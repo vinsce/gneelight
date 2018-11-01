@@ -35,6 +35,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.init_control_layout()
         self.no_result_box = None
+        self.loading = False
 
         self.start_discovery()
 
@@ -74,10 +75,12 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def show_loading(self, loading, control_only=False):
         if loading:
+            if self.loading:
+                return False
             if not control_only:
                 self.box.remove(self.bulbs_combo)
             self.box.remove(self.control_box)
-            if self.no_result_box:
+            if self.no_result_box is not None:
                 self.box.remove(self.no_result_box)
             self.spinner.start()
             self.box.pack_start(self.spinner, True, True, 150)
@@ -85,11 +88,13 @@ class MainWindow(Gtk.ApplicationWindow):
         else:
             self.spinner.stop()
             self.box.remove(self.spinner)
+        self.loading = loading
+        return True
 
     # noinspection PyUnusedLocal
     def start_discovery(self, widget=None):
-        self.show_loading(True)
-        BulbWrapper.discovery_bulbs(on_complete=self.discovered)
+        if self.show_loading(True):
+            BulbWrapper.discovery_bulbs(on_complete=self.discovered)
 
     def discovered(self, wrappers):
         self.discovered_bulbs = wrappers

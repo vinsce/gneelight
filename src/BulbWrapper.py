@@ -2,6 +2,7 @@ from gi.overrides.Gdk import RGBA
 from yeelight import Bulb, discover_bulbs
 from yeelight.enums import CronType
 
+from gi.repository.GLib import idle_add
 from utils.thread_utils import run_in_thread
 
 
@@ -43,7 +44,7 @@ class BulbWrapper:
     def update_status_sync(self, on_complete=None):
         self.bulb_status = BulbStatus(self.get_bulb().get_properties())
         if on_complete:
-            on_complete()
+            idle_add(on_complete)
 
     # Brightness
     def change_brightness(self, brightness, on_complete):
@@ -52,7 +53,7 @@ class BulbWrapper:
     def change_brightness_sync(self, brightness, on_complete):
         self.get_bulb().set_brightness(brightness=brightness)
         self.update_status_sync()
-        on_complete()
+        idle_add(on_complete)
 
     # Color
     def change_color(self, color: RGBA, on_complete):
@@ -61,7 +62,7 @@ class BulbWrapper:
     def change_color_sync(self, color: RGBA, on_complete):
         self.get_bulb().set_rgb(red=color.red * 255, green=color.green * 255, blue=color.blue * 255)
         self.update_status_sync()
-        on_complete()
+        idle_add(on_complete)
 
     # Delay off
     def change_delay_off(self, delay, on_complete):
@@ -73,7 +74,7 @@ class BulbWrapper:
         else:
             self.get_bulb().cron_add(CronType.off, delay)
         self.update_status_sync()
-        on_complete()
+        idle_add(on_complete)
 
     # Toggle
     def toggle(self, status, on_complete):
@@ -85,7 +86,7 @@ class BulbWrapper:
         else:
             self.get_bulb().turn_off()
         self.update_status_sync()
-        on_complete()
+        idle_add(on_complete)
 
     @staticmethod
     def discovery_bulbs(on_complete):
@@ -98,5 +99,4 @@ class BulbWrapper:
         wrappers = []
         for bulb_info in discovered_bulbs:
             wrappers.append(BulbWrapper(bulb_info))
-
-        on_complete(wrappers)
+        idle_add(on_complete, wrappers)

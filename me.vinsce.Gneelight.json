@@ -1,0 +1,64 @@
+{
+  "app-id": "me.vinsce.Gneelight",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "3.30",
+  "sdk": "org.gnome.Sdk",
+  "command": "/app/Gneelight/bin/runner.sh",
+  "finish-args": [
+    "--share=network",
+    "--socket=wayland",
+    "--socket=x11"
+  ],
+  "modules": [
+    {
+      "name": "cpython",
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://www.python.org/ftp/python/3.6.5/Python-3.6.5.tar.xz",
+          "sha256": "f434053ba1b5c8a5cc597e966ead3c5143012af827fd3f0697d21450bb8d87a6"
+        }
+      ]
+    },
+    {
+      "name": "Gneelight",
+      "buildsystem": "simple",
+      "build-commands": [
+        "mkdir /app/Gneelight/",
+        "mkdir /app/Gneelight/src",
+        "pwd",
+        "ls -a",
+        "install -D runner.sh /app/Gneelight/bin/runner.sh",
+        "install -D *.py /app/Gneelight/src/",
+        "install -D me.vinsce.Gneelight.desktop /app/share/applications/me.vinsce.Gneelight.desktop"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "src"
+        },
+        {
+          "type": "file",
+          "path": "runner.sh"
+        },
+        {
+          "type": "file",
+          "path": "me.vinsce.Gneelight.desktop"
+        }
+      ]
+    },
+    {
+      "name": "pip-install",
+      "buildsystem": "simple",
+      "build-options": {
+        "build-args": [
+          "--share=network"
+        ]
+      },
+      "build-commands": [
+        "pip3 install yeelight PyGObject"
+      ]
+    }
+  ]
+}
+

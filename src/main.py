@@ -2,8 +2,9 @@ import threading
 
 from yeelight import discover_bulbs, Bulb
 
-import gi
 from constants import *
+
+import gi
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gio
@@ -12,8 +13,10 @@ from gi.repository import Gtk, Gio
 # TODO add predefined options
 # TODO add bulb info section
 # TODO add delay off option
+# TODO add color selection
 
 
+# noinspection PyArgumentList
 class MainWindow(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self, title=APP_NAME)
@@ -49,9 +52,11 @@ class MainWindow(Gtk.Window):
         self.bulb = None
 
         self.init_control_layout()
+        self.no_result_box = None
 
         self.start_discovery()
 
+    # noinspection PyAttributeOutsideInit
     def init_control_layout(self):
         self.control_box = Gtk.ListBox()
         self.control_box.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -70,29 +75,26 @@ class MainWindow(Gtk.Window):
         self.brightness_slider.connect("button-release-event", self.change_brightness)
 
         row2.set_content(Gtk.Label(label="Brightness", xalign=0), self.brightness_slider)
-
         self.control_box.add(row2)
 
+    # noinspection PyUnusedLocal
     def toggle_bulb(self, widget, status):
+        MainWindow.run_in_thread(target=self.toggle_sync, status=status)
+
+    def toggle_sync(self, status):
         if status:
             self.bulb.turn_on()
         else:
             self.bulb.turn_off()
-        self.update_status()
+        self.update_status_sync()
 
-    def on_button_clicked(self, widget):
-        print(self.bulb.get_properties())
-        if self.bulb.get_properties().get('power') == 'on':
-            self.bulb.turn_off()
-        else:
-            self.bulb.turn_on()
-
-    def show_loading(self, loading):
+    def show_loading(self, loading, control_only=False):
         if loading:
-            self.box.remove(self.bulbs_combo)
+            if not control_only:
+                self.box.remove(self.bulbs_combo)
             self.box.remove(self.control_box)
-            for child in self.box.get_children():
-                self.box.remove(child)
+            if self.no_result_box:
+                self.box.remove(self.no_result_box)
             self.spinner.start()
             self.box.pack_start(self.spinner, True, True, 150)
         else:
@@ -111,10 +113,8 @@ class MainWindow(Gtk.Window):
             for bulb in self.discovered_bulbs:
                 self.bulbs_combo.append_text(bulb.get('ip') + ":" + str(bulb.get('port')))
 
-            self.bulbs_combo.set_active(0)
-
             self.box.pack_start(self.bulbs_combo, False, False, 6)
-            self.box.pack_start(self.control_box, True, True, 0)
+            self.bulbs_combo.set_active(0)
         else:
             self.show_no_result()
         self.box.show_all()
@@ -125,17 +125,23 @@ class MainWindow(Gtk.Window):
             model = combo.get_model()
             self.bulb_ip = model[tree_iter][0].split(':')[0]
             print("Selected: bulb=%s" % self.bulb_ip)
-            self.bulb = Bulb(self.bulb_ip)
-            self.update_status()
+            self.start_bulb_connection()
         else:
             pass
 
+    # noinspection PyUnusedLocal
     def change_brightness(self, widget, event):
         bright = self.brightness_slider.get_value()
-        self.bulb.set_brightness(bright)
+        MainWindow.run_in_thread(self.change_brightness_sync, brightness=bright)
+
+    def change_brightness_sync(self, brightness):
+        self.bulb.set_brightness(brightness=brightness)
         self.update_status()
 
     def update_status(self):
+        MainWindow.run_in_thread(target=self.update_status_sync)
+
+    def update_status_sync(self):
         bulb_properties = self.bulb.get_properties()
         print(bulb_properties)
 
@@ -144,7 +150,7 @@ class MainWindow(Gtk.Window):
         self.control_box.show_all()
 
     def show_no_result(self):
-        no_result_box = Gtk.VBox(homogeneous=False)
+        self.no_result_box = Gtk.VBox(homogeneous=False)
 
         pixbuf = Gtk.IconTheme.get_default().load_icon('computer-fail-symbolic', 64, 0)
 
@@ -154,17 +160,32 @@ class MainWindow(Gtk.Window):
         button.connect("clicked", self.start_discovery)
         button.set_hexpand(False)
         button.set_halign(Gtk.Align.CENTER)
-        no_result_box.pack_start(icon, False, True, 0)
-        no_result_box.pack_start(label, False, False, 8)
-        no_result_box.pack_start(button, False, False, 16)
-        no_result_box.set_valign(Gtk.Align.CENTER)
+        self.no_result_box.pack_start(icon, False, True, 0)
+        self.no_result_box.pack_start(label, False, False, 8)
+        self.no_result_box.pack_start(button, False, False, 16)
+        self.no_result_box.set_valign(Gtk.Align.CENTER)
 
-        self.box.pack_start(no_result_box, True, False, 0)
+        self.box.pack_start(self.no_result_box, True, False, 0)
 
+    # noinspection PyUnusedLocal
     def start_discovery(self, widget=None):
         self.show_loading(True)
+        MainWindow.run_in_thread(target=self.discovery)
 
-        thread = threading.Thread(target=self.discovery)
+    def start_bulb_connection(self):
+        self.show_loading(True, control_only=True)
+        MainWindow.run_in_thread(target=self.bulb_connection)
+
+    def bulb_connection(self):
+        self.bulb = Bulb(self.bulb_ip)
+        self.update_status()
+        self.show_loading(False, control_only=True)
+        if not self.control_box.get_parent():
+            self.box.pack_start(self.control_box, True, True, 0)
+
+    @staticmethod
+    def run_in_thread(target, **kwargs):
+        thread = threading.Thread(target=target, kwargs=kwargs)
         thread.daemon = True
         thread.start()
 

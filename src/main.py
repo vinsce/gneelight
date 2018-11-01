@@ -1,5 +1,6 @@
 import threading
 
+from gi.overrides.Gdk import RGBA
 from yeelight import discover_bulbs, Bulb
 from yeelight.enums import CronType
 
@@ -12,13 +13,12 @@ from gi.repository import Gtk, Gio
 
 # TODO add predefined options
 # TODO add bulb info section
-# TODO add color selection
 
 
 # noinspection PyArgumentList
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
-        Gtk.Window.__init__(self,  *args, **kwargs)
+        Gtk.Window.__init__(self, *args, **kwargs)
 
         self.connect("destroy", Gtk.main_quit)
         self.set_default_size(400, 400)
@@ -85,6 +85,12 @@ class MainWindow(Gtk.ApplicationWindow):
         row3.set_content(Gtk.Label(label="Delay off (minutes)", xalign=0), self.delay_spin_button, control_expand=False)
         self.control_box.add(row3)
 
+        row4 = BulbOptionRow()
+        self.color_button = Gtk.ColorButton.new_with_rgba(rgba=RGBA())
+        self.color_button.connect('color-set', self.change_color)
+        row4.set_content(Gtk.Label(label="Color", xalign=0), self.color_button, control_expand=False)
+        self.control_box.add(row4)
+
     # noinspection PyUnusedLocal
     def toggle_bulb(self, widget, status):
         MainWindow.run_in_thread(target=self.toggle_sync, status=status)
@@ -119,7 +125,8 @@ class MainWindow(Gtk.ApplicationWindow):
             self.bulbs_combo.remove_all()
 
             for bulb in self.discovered_bulbs:
-                self.bulbs_combo.append_text(bulb.get('ip') + ":" + str(bulb.get('port')))
+                self.bulbs_combo.append_text(bulb.get('ip') + ":" + str(bulb.get('port')) + ' (' + bulb.get('capabilities').get('model') + ')')
+                print(bulb)
 
             self.box.pack_start(self.bulbs_combo, False, False, 6)
             self.bulbs_combo.set_active(0)
@@ -146,6 +153,10 @@ class MainWindow(Gtk.ApplicationWindow):
         self.bulb.set_brightness(brightness=brightness)
         self.update_status()
 
+    def change_color(self, widget):
+        rgba = self.color_button.get_rgba()
+        self.bulb.set_rgb(red=rgba.red*255, green=rgba.green*255, blue=rgba.blue*255)
+
     def change_delay_off(self, widget):
         MainWindow.run_in_thread(self.change_delay_off_sync, delay=self.delay_spin_button.get_value())
 
@@ -165,6 +176,11 @@ class MainWindow(Gtk.ApplicationWindow):
         self.power_switch.set_active(bulb_properties.get('power') == 'on')
         self.brightness_slider.set_value(int(bulb_properties.get('bright')))
         self.delay_spin_button.set_value(float(bulb_properties.get('delayoff')))
+        if bulb_properties.get('rgb'):
+            self.color_button.set_rgba(MainWindow.parse_rgb(bulb_properties))
+        else:
+            self.color_button.set_rgba(RGBA())
+
         self.control_box.show_all()
 
     def show_no_result(self):
@@ -206,6 +222,19 @@ class MainWindow(Gtk.ApplicationWindow):
         thread = threading.Thread(target=target, kwargs=kwargs)
         thread.daemon = True
         thread.start()
+
+    @staticmethod
+    def parse_rgb(rgb):
+        r = int(rgb / 65536) / 255
+        rgb = rgb % 65536
+        g = int(rgb / 256) / 255
+        rgb = rgb % 256
+        b = rgb / 255
+        return RGBA(red=r, green=g, blue=b)
+
+    @staticmethod
+    def build_rgb(rgba: RGBA):
+        return rgba.red * 65536 + rgba.green * 256 + rgba.blue
 
 
 class BulbOptionRow(Gtk.ListBoxRow):

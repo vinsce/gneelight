@@ -1,11 +1,9 @@
-import threading
-
 from gi.overrides.Gdk import RGBA
-from yeelight import discover_bulbs, Bulb
-from yeelight.enums import CronType
 
 import gi
+from BulbWrapper import BulbWrapper
 from constants import *
+from utils.color_utils import parse_rgb
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gio
@@ -49,9 +47,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.bulbs_combo.set_halign(Gtk.Align.CENTER)
         self.bulbs_combo.set_size_request(200, -1)
 
-        self.discovered_bulbs = None
-        self.bulb_ip = None
-        self.bulb = None
+        self.discovered_bulbs = []
+        self.bulb_wrapper: BulbWrapper = None
 
         self.init_control_layout()
         self.no_result_box = None
@@ -93,14 +90,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
     # noinspection PyUnusedLocal
     def toggle_bulb(self, widget, status):
-        MainWindow.run_in_thread(target=self.toggle_sync, status=status)
-
-    def toggle_sync(self, status):
-        if status:
-            self.bulb.turn_on()
-        else:
-            self.bulb.turn_off()
-        self.update_status_sync()
+        self.bulb_wrapper.toggle(status=status, on_complete=self.update_status_on_complete)
 
     def show_loading(self, loading, control_only=False):
         if loading:
@@ -116,8 +106,8 @@ class MainWindow(Gtk.ApplicationWindow):
             self.box.remove(self.spinner)
         self.box.show_all()
 
-    def discovery(self):
-        self.discovered_bulbs = discover_bulbs()
+    def discovered(self, wrappers):
+        self.discovered_bulbs = wrappers
 
         self.show_loading(False)
 
@@ -125,7 +115,7 @@ class MainWindow(Gtk.ApplicationWindow):
             self.bulbs_combo.remove_all()
 
             for bulb in self.discovered_bulbs:
-                self.bulbs_combo.append_text(bulb.get('ip') + ":" + str(bulb.get('port')) + ' (' + bulb.get('capabilities').get('model') + ')')
+                self.bulbs_combo.append_text(bulb.get_bulb_display_text())
                 print(bulb)
 
             self.box.pack_start(self.bulbs_combo, False, False, 6)
@@ -138,46 +128,40 @@ class MainWindow(Gtk.ApplicationWindow):
         tree_iter = combo.get_active_iter()
         if tree_iter is not None:
             model = combo.get_model()
-            self.bulb_ip = model[tree_iter][0].split(':')[0]
-            print("Selected: bulb=%s" % self.bulb_ip)
-            self.start_bulb_connection()
+
+            for bw in self.discovered_bulbs:
+                if bw.get_bulb_display_text() == model[tree_iter][0]:
+                    self.bulb_wrapper = bw
+
+            print("Selected: bulb=%s" % self.bulb_wrapper.get_bulb_display_text())
+
+            self.show_loading(True, control_only=True)
+            self.bulb_wrapper.update_status(on_complete=self.bulb_connected)
         else:
             pass
 
     # noinspection PyUnusedLocal
     def change_brightness(self, widget, event):
         bright = self.brightness_slider.get_value()
-        MainWindow.run_in_thread(self.change_brightness_sync, brightness=bright)
+        self.bulb_wrapper.change_brightness(bright, self.update_status_on_complete)
 
-    def change_brightness_sync(self, brightness):
-        self.bulb.set_brightness(brightness=brightness)
-        self.update_status()
-
+    # noinspection PyTypeChecker,PyUnusedLocal
     def change_color(self, widget):
-        rgba = self.color_button.get_rgba()
-        self.bulb.set_rgb(red=rgba.red*255, green=rgba.green*255, blue=rgba.blue*255)
+        self.bulb_wrapper.change_color(self.color_button.get_rgba(), self.update_status_on_complete)
 
+    # noinspection PyUnusedLocal
     def change_delay_off(self, widget):
-        MainWindow.run_in_thread(self.change_delay_off_sync, delay=self.delay_spin_button.get_value())
-
-    def change_delay_off_sync(self, delay):
-        if delay == 0:
-            self.bulb.cron_del(CronType.off)
-        else:
-            self.bulb.cron_add(CronType.off, delay)
+        self.bulb_wrapper.change_delay_off(delay=self.delay_spin_button.get_value(), on_complete=self.update_status_on_complete)
 
     def update_status(self):
-        MainWindow.run_in_thread(target=self.update_status_sync)
+        self.bulb_wrapper.update_status(self.update_status_on_complete)
 
-    def update_status_sync(self):
-        bulb_properties = self.bulb.get_properties()
-        print(bulb_properties)
-
-        self.power_switch.set_active(bulb_properties.get('power') == 'on')
-        self.brightness_slider.set_value(int(bulb_properties.get('bright')))
-        self.delay_spin_button.set_value(float(bulb_properties.get('delayoff')))
-        if bulb_properties.get('rgb'):
-            self.color_button.set_rgba(MainWindow.parse_rgb(bulb_properties))
+    def update_status_on_complete(self):
+        self.power_switch.set_active(self.bulb_wrapper.bulb_status.power == 'on')
+        self.brightness_slider.set_value(self.bulb_wrapper.bulb_status.bright)
+        self.delay_spin_button.set_value(self.bulb_wrapper.bulb_status.delay_off)
+        if self.bulb_wrapper.bulb_status.rgb:
+            self.color_button.set_rgba(parse_rgb(self.bulb_wrapper.bulb_status.rgb))
         else:
             self.color_button.set_rgba(RGBA())
 
@@ -204,37 +188,13 @@ class MainWindow(Gtk.ApplicationWindow):
     # noinspection PyUnusedLocal
     def start_discovery(self, widget=None):
         self.show_loading(True)
-        MainWindow.run_in_thread(target=self.discovery)
+        BulbWrapper.discovery_bulbs(on_complete=self.discovered)
 
-    def start_bulb_connection(self):
-        self.show_loading(True, control_only=True)
-        MainWindow.run_in_thread(target=self.bulb_connection)
-
-    def bulb_connection(self):
-        self.bulb = Bulb(self.bulb_ip)
-        self.update_status()
+    def bulb_connected(self):
+        self.update_status_on_complete()
         self.show_loading(False, control_only=True)
         if not self.control_box.get_parent():
             self.box.pack_start(self.control_box, True, True, 0)
-
-    @staticmethod
-    def run_in_thread(target, **kwargs):
-        thread = threading.Thread(target=target, kwargs=kwargs)
-        thread.daemon = True
-        thread.start()
-
-    @staticmethod
-    def parse_rgb(rgb):
-        r = int(rgb / 65536) / 255
-        rgb = rgb % 65536
-        g = int(rgb / 256) / 255
-        rgb = rgb % 256
-        b = rgb / 255
-        return RGBA(red=r, green=g, blue=b)
-
-    @staticmethod
-    def build_rgb(rgba: RGBA):
-        return rgba.red * 65536 + rgba.green * 256 + rgba.blue
 
 
 class BulbOptionRow(Gtk.ListBoxRow):

@@ -18,21 +18,9 @@ class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         Gtk.Window.__init__(self, *args, **kwargs)
 
-        self.connect("destroy", Gtk.main_quit)
         self.set_default_size(400, 400)
 
-        self.header_bar = Gtk.HeaderBar()
-        self.header_bar.set_show_close_button(True)
-        self.header_bar.props.title = APP_NAME
-        self.set_titlebar(self.header_bar)
-        self.set_hide_titlebar_when_maximized(False)
-        self.set_decorated(True)
-        self.refresh_button = Gtk.Button()
-        icon = Gio.ThemedIcon(name="view-refresh-symbolic")
-        image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
-        self.refresh_button.add(image)
-        self.header_bar.pack_end(self.refresh_button)
-        self.refresh_button.connect('clicked', self.start_discovery)
+        self.header_bar = self.init_header_bar()
 
         self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.box.set_vexpand(True)
@@ -40,12 +28,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.spinner = Gtk.Spinner()
 
-        self.bulbs_combo = Gtk.ComboBoxText()
-        self.bulbs_combo.set_entry_text_column(0)
-        self.bulbs_combo.connect("changed", self.on_bulb_selected)
-        self.bulbs_combo.set_hexpand(False)
-        self.bulbs_combo.set_halign(Gtk.Align.CENTER)
-        self.bulbs_combo.set_size_request(200, -1)
+        self.bulbs_combo = self.init_bulbs_combo()
 
         self.discovered_bulbs = []
         self.bulb_wrapper: BulbWrapper = None
@@ -59,20 +42,17 @@ class MainWindow(Gtk.ApplicationWindow):
     def init_control_layout(self):
         self.control_box = Gtk.ListBox()
         self.control_box.set_selection_mode(Gtk.SelectionMode.NONE)
-        row = BulbOptionRow()
 
+        row = BulbOptionRow()
         self.power_switch = Gtk.Switch()
         self.power_switch.props.valign = Gtk.Align.CENTER
         self.power_switch.connect('state-set', self.toggle_bulb)
-
         row.set_content(Gtk.Label(label="Power", xalign=0), self.power_switch, control_expand=False)
-
         self.control_box.add(row)
 
         row2 = BulbOptionRow()
         self.brightness_slider = Gtk.Scale.new_with_range(orientation=Gtk.Orientation.HORIZONTAL, min=1, max=100, step=1)
         self.brightness_slider.connect("button-release-event", self.change_brightness)
-
         row2.set_content(Gtk.Label(label="Brightness", xalign=0), self.brightness_slider)
         self.control_box.add(row2)
 
@@ -101,10 +81,15 @@ class MainWindow(Gtk.ApplicationWindow):
                 self.box.remove(self.no_result_box)
             self.spinner.start()
             self.box.pack_start(self.spinner, True, True, 150)
+            self.box.show_all()
         else:
             self.spinner.stop()
             self.box.remove(self.spinner)
-        self.box.show_all()
+
+    # noinspection PyUnusedLocal
+    def start_discovery(self, widget=None):
+        self.show_loading(True)
+        BulbWrapper.discovery_bulbs(on_complete=self.discovered)
 
     def discovered(self, wrappers):
         self.discovered_bulbs = wrappers
@@ -116,29 +101,33 @@ class MainWindow(Gtk.ApplicationWindow):
 
             for bulb in self.discovered_bulbs:
                 self.bulbs_combo.append_text(bulb.get_bulb_display_text())
-                print(bulb)
+                print(bulb.get_bulb_display_text())
 
             self.box.pack_start(self.bulbs_combo, False, False, 6)
             self.bulbs_combo.set_active(0)
         else:
             self.show_no_result()
-        self.box.show_all()
+            self.box.show_all()
 
     def on_bulb_selected(self, combo):
         tree_iter = combo.get_active_iter()
-        if tree_iter is not None:
-            model = combo.get_model()
+        model = combo.get_model()
 
-            for bw in self.discovered_bulbs:
-                if bw.get_bulb_display_text() == model[tree_iter][0]:
-                    self.bulb_wrapper = bw
+        for bw in self.discovered_bulbs:
+            if bw.get_bulb_display_text() == model[tree_iter][0]:
+                self.bulb_wrapper = bw
 
-            print("Selected: bulb=%s" % self.bulb_wrapper.get_bulb_display_text())
+        print("Selected: bulb=%s" % self.bulb_wrapper.get_bulb_display_text())
 
-            self.show_loading(True, control_only=True)
-            self.bulb_wrapper.update_status(on_complete=self.bulb_connected)
-        else:
-            pass
+        self.show_loading(True, control_only=True)
+        self.bulb_wrapper.update_status(on_complete=self.bulb_connected)
+
+    def bulb_connected(self):
+        self.update_status_on_complete()
+        self.show_loading(False, control_only=True)
+        if not self.control_box.get_parent():
+            self.box.pack_start(self.control_box, True, True, 0)
+            self.show_all()
 
     # noinspection PyUnusedLocal
     def change_brightness(self, widget, event):
@@ -165,7 +154,7 @@ class MainWindow(Gtk.ApplicationWindow):
         else:
             self.color_button.set_rgba(RGBA())
 
-        self.control_box.show_all()
+        self.show_all()
 
     def show_no_result(self):
         self.no_result_box = Gtk.VBox(homogeneous=False)
@@ -185,22 +174,33 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.box.pack_start(self.no_result_box, True, False, 0)
 
-    # noinspection PyUnusedLocal
-    def start_discovery(self, widget=None):
-        self.show_loading(True)
-        BulbWrapper.discovery_bulbs(on_complete=self.discovered)
+    def init_header_bar(self):
+        header_bar = Gtk.HeaderBar()
+        header_bar.set_show_close_button(True)
+        header_bar.props.title = APP_NAME
+        self.set_titlebar(header_bar)
 
-    def bulb_connected(self):
-        self.update_status_on_complete()
-        self.show_loading(False, control_only=True)
-        if not self.control_box.get_parent():
-            self.box.pack_start(self.control_box, True, True, 0)
+        refresh_button = Gtk.Button()
+        icon = Gio.ThemedIcon(name="view-refresh-symbolic")
+        image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
+        refresh_button.add(image)
+        header_bar.pack_end(refresh_button)
+        refresh_button.connect('clicked', self.start_discovery)
+        return header_bar
+
+    def init_bulbs_combo(self):
+        bulbs_combo = Gtk.ComboBoxText()
+        bulbs_combo.set_entry_text_column(0)
+        bulbs_combo.connect("changed", self.on_bulb_selected)
+        bulbs_combo.set_hexpand(False)
+        bulbs_combo.set_halign(Gtk.Align.CENTER)
+        bulbs_combo.set_size_request(250, -1)
+        return bulbs_combo
 
 
 class BulbOptionRow(Gtk.ListBoxRow):
     def __init__(self):
         super().__init__()
-        self.set_size_request(-1, 48)
 
     def set_content(self, label: Gtk.Label, control: Gtk.Widget, control_expand: bool = True):
         h_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=64)
@@ -212,4 +212,5 @@ class BulbOptionRow(Gtk.ListBoxRow):
 
         if not control_expand:
             control.set_halign(Gtk.Align.END)
+        self.set_size_request(-1, 48)
         self.show_all()

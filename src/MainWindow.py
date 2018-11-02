@@ -1,9 +1,12 @@
 import gi
-from BulbWrapper import BulbWrapper
-from constants import *
-from utils.color_utils import parse_rgb
 
 gi.require_version('Gtk', '3.0')
+
+from BulbWrapper import BulbWrapper, ColorModes
+from constants import *
+from utils.color_utils import parse_rgb
+from utils.widget_utils import drop_scroll_event
+
 from gi.repository import Gtk, Gio
 from gi.overrides.Gdk import RGBA
 
@@ -16,7 +19,8 @@ class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         Gtk.Window.__init__(self, *args, **kwargs)
 
-        self.set_default_size(400, 400)
+        self.set_default_size(500, 600)
+        self.set_resizable(True)
 
         self.header_bar = self.init_header_bar()
 
@@ -31,51 +35,57 @@ class MainWindow(Gtk.ApplicationWindow):
         self.discovered_bulbs = []
         self.bulb_wrapper: BulbWrapper = None
 
-        self.init_control_layout()
         self.no_result_box = None
+        self.control_box = None
         self.loading = False
 
         self.start_discovery()
 
     # noinspection PyAttributeOutsideInit
     def init_control_layout(self):
-        self.control_box = Gtk.ListBox()
-        self.control_box.set_selection_mode(Gtk.SelectionMode.NONE)
+        control_box_container = Gtk.VBox()
+        control_box = Gtk.ListBox()
+        control_box.set_selection_mode(Gtk.SelectionMode.NONE)
 
         self.row_info = BulbInfoRow()
-        self.control_box.add(self.row_info)
+        control_box_container.pack_start(self.row_info, False, False, 0)
 
         row = BulbOptionRow()
         self.power_switch = Gtk.Switch()
         self.power_switch.props.valign = Gtk.Align.CENTER
         self.power_switch.connect('state-set', self.toggle_bulb)
         row.set_content(Gtk.Label(label="Power", xalign=0), self.power_switch, control_expand=False)
-        self.control_box.add(row)
+        control_box.add(row)
 
         row2 = BulbOptionRow()
         self.brightness_slider = Gtk.Scale.new_with_range(orientation=Gtk.Orientation.HORIZONTAL, min=1, max=100, step=1)
         self.brightness_slider.connect("button-release-event", self.change_brightness)
+        self.brightness_slider.connect("scroll-event", drop_scroll_event)
         row2.set_content(Gtk.Label(label="Brightness", xalign=0), self.brightness_slider)
-        self.control_box.add(row2)
+        control_box.add(row2)
 
         row3 = BulbOptionRow()
         self.delay_spin_button = Gtk.SpinButton.new_with_range(min=0, max=60, step=1)
         self.delay_spin_button.connect('value-changed', self.change_delay_off)
+        self.delay_spin_button.connect("scroll-event", drop_scroll_event)
         row3.set_content(Gtk.Label(label="Delay off (minutes)", xalign=0), self.delay_spin_button, control_expand=False)
-        self.control_box.add(row3)
+        control_box.add(row3)
 
-        row4 = BulbOptionRow()
-        self.color_button = Gtk.ColorButton.new_with_rgba(rgba=RGBA())
-        self.color_button.connect('color-set', self.change_color)
-        row4.set_content(Gtk.Label(label="Color", xalign=0), self.color_button, control_expand=False)
-        self.control_box.add(row4)
+        if self.bulb_wrapper.bulb_status.color_mode == ColorModes.COLOR_MODE:
+            row4 = BulbOptionRow()
+            self.color_button = Gtk.ColorButton.new_with_rgba(rgba=RGBA())
+            self.color_button.connect('color-set', self.change_color)
+            row4.set_content(Gtk.Label(label="Color", xalign=0), self.color_button, control_expand=False)
+            control_box.add(row4)
 
         # Make the control box scrollable
+        control_box_container.pack_start(control_box, True, True, 0)
         scrollable_win = Gtk.ScrolledWindow()
-        scrollable_win.add_with_viewport(self.control_box)
+        scrollable_win.add_with_viewport(control_box_container)
         self.control_box = scrollable_win
 
-    # noinspection PyUnusedLocal
+        # noinspection PyUnusedLocal
+
     def toggle_bulb(self, widget, status):
         self.bulb_wrapper.toggle(status=status, on_complete=self.update_status_on_complete)
 
@@ -85,7 +95,8 @@ class MainWindow(Gtk.ApplicationWindow):
                 return False
             if not control_only:
                 self.box.remove(self.bulbs_combo)
-            self.box.remove(self.control_box)
+            if self.control_box:
+                self.box.remove(self.control_box)
             if self.no_result_box is not None:
                 self.box.remove(self.no_result_box)
             self.spinner.start()
@@ -126,7 +137,9 @@ class MainWindow(Gtk.ApplicationWindow):
             model = combo.get_model()
             for bw in self.discovered_bulbs:
                 if bw.get_bulb_display_text() == model[tree_iter][0]:
-                    self.bulb_wrapper = bw
+                    if self.bulb_wrapper != bw:
+                        self.bulb_wrapper = bw
+                        self.init_control_layout()
 
             print("Selected: bulb=%s" % self.bulb_wrapper.get_bulb_display_text())
 
@@ -161,10 +174,12 @@ class MainWindow(Gtk.ApplicationWindow):
         self.power_switch.set_active(self.bulb_wrapper.bulb_status.power == 'on')
         self.brightness_slider.set_value(self.bulb_wrapper.bulb_status.bright)
         self.delay_spin_button.set_value(self.bulb_wrapper.bulb_status.delay_off)
-        if self.bulb_wrapper.bulb_status.rgb:
-            self.color_button.set_rgba(parse_rgb(self.bulb_wrapper.bulb_status.rgb))
-        else:
-            self.color_button.set_rgba(RGBA())
+
+        if self.bulb_wrapper.bulb_status.color_mode == ColorModes.COLOR_MODE:
+            if self.bulb_wrapper.bulb_status.rgb:
+                self.color_button.set_rgba(parse_rgb(self.bulb_wrapper.bulb_status.rgb))
+            else:
+                self.color_button.set_rgba(RGBA())
 
         self.show_all()
 
@@ -240,6 +255,8 @@ class BulbInfoRow(Gtk.ListBoxRow):
         self.grid.set_margin_end(margin)
         self.grid.set_margin_top(margin)
         self.grid.set_margin_bottom(margin)
+
+        self.set_halign(Gtk.Align.CENTER)
 
     def update_content(self, wrapper: BulbWrapper):
         row_index = 0

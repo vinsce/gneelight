@@ -1,9 +1,11 @@
-import gi, sys
-from constants import APP_NAME, AUTHORS, WEBSITE, APP_VERSION, APP_COMMENTS
-from gi.repository.Gio import MenuModel
-from main import MainWindow
+import gi
 
 gi.require_version('Gtk', '3.0')
+
+import sys
+from constants import *
+from MainWindow import MainWindow
+
 from gi.repository import Gtk, Gio
 
 # This would typically be its own file
@@ -55,6 +57,7 @@ class GneelightApp(Gtk.Application):
             # when the last one is closed the application shuts down
             self.window = MainWindow(application=self, title=APP_NAME)
 
+        self.window.present()
         self.window.show_all()
 
     # noinspection PyArgumentList

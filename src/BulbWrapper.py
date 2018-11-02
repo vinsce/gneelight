@@ -1,3 +1,5 @@
+from enum import Enum
+
 from gi.overrides.Gdk import RGBA
 from yeelight import Bulb, discover_bulbs
 from yeelight.enums import CronType
@@ -6,11 +8,20 @@ from gi.repository.GLib import idle_add
 from utils.thread_utils import run_in_thread
 
 
+class ColorModes(Enum):
+    COLOR_MODE = 1
+    COLOR_TEMPERATURE = 2
+    HSV = 3
+
+    def __str__(self):
+        return self.name.lower() + ' (' + str(self.value) + ')'
+
+
 class BulbStatus:
     def __init__(self, bulb_status):
         self.power = bulb_status.get('power')
         self.bright = int(bulb_status.get('bright')) if bulb_status.get('bright') else None
-        self.color_mode = int(bulb_status.get('color_mode'))
+        self.color_mode = ColorModes(int(bulb_status.get('color_mode')))
         self.ct = int(bulb_status.get('ct')) if bulb_status.get('ct') else None
         self.rgb = int(bulb_status.get('rgb')) if bulb_status.get('rgb') else None
         self.hue = int(bulb_status.get('hue')) if bulb_status.get('hue') else None
@@ -39,10 +50,10 @@ class BulbWrapper:
             'Power': self.bulb_status.power,
             'Brightness': self.bulb_status.bright,
             'Color Mode': self.bulb_status.color_mode,
-            'CT': self.bulb_status.ct,
+            'Color Temperature': self.bulb_status.ct,
             'RGB': self.bulb_status.rgb,
             'HUE': self.bulb_status.hue,
-            'SAT': self.bulb_status.sat,
+            'Saturation': self.bulb_status.sat,
             'Delay Off': self.bulb_status.delay_off,
             'Capabilities': self.bulb_support
         }

@@ -26,10 +26,12 @@
       "build-commands": [
         "mkdir /app/Gneelight/",
         "mkdir /app/Gneelight/src",
+        "mkdir /app/Gneelight/src/utils",
         "pwd",
         "ls -a",
         "install -D runner.sh /app/Gneelight/bin/runner.sh",
         "install -D *.py /app/Gneelight/src/",
+        "install -D utils/*.py /app/Gneelight/src/utils",
         "install -D me.vinsce.Gneelight.desktop /app/share/applications/me.vinsce.Gneelight.desktop"
       ],
       "sources": [

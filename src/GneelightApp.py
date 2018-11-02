@@ -6,7 +6,9 @@ import sys
 from constants import *
 from MainWindow import MainWindow
 
-from gi.repository import Gtk, Gio
+from gi.repository import Gtk, Gio, Gdk
+from gi.repository.GdkPixbuf import Pixbuf
+
 
 # This would typically be its own file
 MENU_XML = """
@@ -59,6 +61,8 @@ class GneelightApp(Gtk.Application):
 
         self.window.present()
         self.window.show_all()
+        icon = Pixbuf.new_from_file(APP_ICON)
+        self.window.set_icon(icon)
 
     # noinspection PyArgumentList
     def on_about(self, action, param):
@@ -68,6 +72,7 @@ class GneelightApp(Gtk.Application):
         about_dialog.set_website(WEBSITE)
         about_dialog.set_comments(APP_COMMENTS)
         about_dialog.set_version(APP_VERSION)
+        about_dialog.set_logo(Pixbuf.new_from_file_at_scale(APP_ICON, width=48, height=48, preserve_aspect_ratio=True))
         about_dialog.present()
 
     def on_quit(self, action, param):

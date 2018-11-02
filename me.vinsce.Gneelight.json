@@ -32,7 +32,9 @@
         "install -D runner.sh /app/Gneelight/bin/runner.sh",
         "install -D *.py /app/Gneelight/src/",
         "install -D utils/*.py /app/Gneelight/src/utils",
-        "install -D me.vinsce.Gneelight.desktop /app/share/applications/me.vinsce.Gneelight.desktop"
+        "install -D me.vinsce.Gneelight.desktop /app/share/applications/me.vinsce.Gneelight.desktop",
+        "install -D gneelight.png /app/share/icons/hicolor/256x256/apps/me.vinsce.Gneelight.png",
+        "install -D gneelight.png /app/Gneelight/res/gneelight.png"
       ],
       "sources": [
         {
@@ -46,6 +48,10 @@
         {
           "type": "file",
           "path": "me.vinsce.Gneelight.desktop"
+        },
+        {
+          "type": "dir",
+          "path": "res"
         }
       ]
     },

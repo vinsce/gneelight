@@ -70,6 +70,11 @@ class MainWindow(Gtk.ApplicationWindow):
         row4.set_content(Gtk.Label(label="Color", xalign=0), self.color_button, control_expand=False)
         self.control_box.add(row4)
 
+        # Make the control box scrollable
+        scrollable_win = Gtk.ScrolledWindow()
+        scrollable_win.add_with_viewport(self.control_box)
+        self.control_box = scrollable_win
+
     # noinspection PyUnusedLocal
     def toggle_bulb(self, widget, status):
         self.bulb_wrapper.toggle(status=status, on_complete=self.update_status_on_complete)

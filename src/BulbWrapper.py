@@ -29,8 +29,39 @@ class BulbWrapper:
         self.bulb_status = BulbStatus(bulb_info.get('capabilities'))
         self.bulb: Bulb = None
 
+    def to_dict(self, exclude_none: bool = True):
+        res = {
+            'IP': self.bulb_ip,
+            'Port': self.bulb_port,
+            'Model': self.bulb_model,
+            'Firmware version': self.bulb_fw_version,
+            'Name': self.bulb_status.name,
+            'Power': self.bulb_status.power,
+            'Brightness': self.bulb_status.bright,
+            'Color Mode': self.bulb_status.color_mode,
+            'CT': self.bulb_status.ct,
+            'RGB': self.bulb_status.rgb,
+            'HUE': self.bulb_status.hue,
+            'SAT': self.bulb_status.sat,
+            'Delay Off': self.bulb_status.delay_off,
+            'Capabilities': self.bulb_support
+        }
+        if exclude_none:
+            for k in list(res):
+                if not res[k]:
+                    del (res[k])
+        return res
+
     def get_bulb_display_text(self):
         return self.bulb_ip + ":" + str(self.bulb_port) + ' (' + self.bulb_model + ')'
+
+    def stringify(self):
+        to_dict = self.to_dict(exclude_none=True)
+        res = ""
+        for k in to_dict:
+            res += k + '\t\t' + str(to_dict[k]) + '\n'
+        res = res[0:-1]
+        return res
 
     def get_bulb(self):
         if not self.bulb:

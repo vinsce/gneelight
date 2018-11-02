@@ -1,5 +1,3 @@
-from gi.overrides.Gdk import RGBA
-
 import gi
 from BulbWrapper import BulbWrapper
 from constants import *
@@ -7,10 +5,10 @@ from utils.color_utils import parse_rgb
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gio
+from gi.overrides.Gdk import RGBA
 
 
 # TODO add predefined options
-# TODO add bulb info section
 
 
 # noinspection PyArgumentList
@@ -43,6 +41,9 @@ class MainWindow(Gtk.ApplicationWindow):
     def init_control_layout(self):
         self.control_box = Gtk.ListBox()
         self.control_box.set_selection_mode(Gtk.SelectionMode.NONE)
+
+        self.row_info = BulbInfoRow()
+        self.control_box.add(self.row_info)
 
         row = BulbOptionRow()
         self.power_switch = Gtk.Switch()
@@ -97,7 +98,7 @@ class MainWindow(Gtk.ApplicationWindow):
             BulbWrapper.discovery_bulbs(on_complete=self.discovered)
 
     def discovered(self, wrappers):
-        self.discovered_bulbs = wrappers
+        self.discovered_bulbs = wrappers or []
 
         self.show_loading(False)
 
@@ -116,16 +117,16 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def on_bulb_selected(self, combo):
         tree_iter = combo.get_active_iter()
-        model = combo.get_model()
+        if tree_iter:
+            model = combo.get_model()
+            for bw in self.discovered_bulbs:
+                if bw.get_bulb_display_text() == model[tree_iter][0]:
+                    self.bulb_wrapper = bw
 
-        for bw in self.discovered_bulbs:
-            if bw.get_bulb_display_text() == model[tree_iter][0]:
-                self.bulb_wrapper = bw
+            print("Selected: bulb=%s" % self.bulb_wrapper.get_bulb_display_text())
 
-        print("Selected: bulb=%s" % self.bulb_wrapper.get_bulb_display_text())
-
-        self.show_loading(True, control_only=True)
-        self.bulb_wrapper.update_status(on_complete=self.bulb_connected)
+            self.show_loading(True, control_only=True)
+            self.bulb_wrapper.update_status(on_complete=self.bulb_connected)
 
     def bulb_connected(self):
         self.update_status_on_complete()
@@ -151,6 +152,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.bulb_wrapper.update_status(self.update_status_on_complete)
 
     def update_status_on_complete(self):
+        self.row_info.update_content(self.bulb_wrapper)
         self.power_switch.set_active(self.bulb_wrapper.bulb_status.power == 'on')
         self.brightness_slider.set_value(self.bulb_wrapper.bulb_status.bright)
         self.delay_spin_button.set_value(self.bulb_wrapper.bulb_status.delay_off)
@@ -218,4 +220,42 @@ class BulbOptionRow(Gtk.ListBoxRow):
         if not control_expand:
             control.set_halign(Gtk.Align.END)
         self.set_size_request(-1, 48)
+        self.show_all()
+
+
+class BulbInfoRow(Gtk.ListBoxRow):
+    def __init__(self):
+        super().__init__()
+        self.grid = Gtk.Grid()
+        self.grid.set_column_spacing(64)
+        self.add(self.grid)
+
+        margin = 16
+        self.grid.set_margin_start(margin)
+        self.grid.set_margin_end(margin)
+        self.grid.set_margin_top(margin)
+        self.grid.set_margin_bottom(margin)
+
+    def update_content(self, wrapper: BulbWrapper):
+        row_index = 0
+        to_dict = wrapper.to_dict(exclude_none=True)
+        if 'Capabilities' in to_dict:
+            del (to_dict['Capabilities'])
+        for prop, value in to_dict.items():
+            prop_label = self.grid.get_child_at(0, row_index) or Gtk.Label(xalign=0)  # Reusing old widget
+            prop_label.set_markup('<b>' + prop + '</b>')
+            if not prop_label.get_parent():
+                self.grid.attach(prop_label, 0, row_index, 1, 1)
+
+            value_label = self.grid.get_child_at(1, row_index) or Gtk.Label(xalign=0)
+            value_label.set_markup('<tt>' + str(value) + '</tt>')
+            value_label.set_line_wrap(True)
+            if not value_label.get_parent():
+                self.grid.attach(value_label, 1, row_index, 1, 1)
+
+            row_index += 1
+
+        for i in range(row_index, int(len(self.grid.get_children()) / 2)):
+            self.grid.remove_row(i)  # Remove unused widgets
+
         self.show_all()

@@ -6,7 +6,7 @@ Written in Python and GTK+ 3 using the [Yeelight Python](https://github.com/skor
 # Installation
 You can install Gneelight using the provided Flatpak package:
 ```bash
-wget https://github.com/vinsce/gneelight/blob/master/gneelight.flatpak
+wget https://github.com/vinsce/gneelight/blob/master/gneelight.flatpak?raw=true -O gneelight.flatpak
 flatpak install --user gneelight.flatpak
 ```
 Alternatively download the entire source and run

@@ -1,4 +1,5 @@
 import gi
+from widgets.BulbSelectionWidget import BulbSelectionWidget
 
 gi.require_version('Gtk', '3.0')
 
@@ -16,6 +17,8 @@ from gi.overrides.Gdk import RGBA
 
 # noinspection PyArgumentList
 class MainWindow(Gtk.ApplicationWindow):
+    bulbs_selection_button = NotImplemented
+
     def __init__(self, *args, **kwargs):
         Gtk.Window.__init__(self, *args, **kwargs)
 
@@ -29,8 +32,6 @@ class MainWindow(Gtk.ApplicationWindow):
         self.add(self.box)
 
         self.spinner = Gtk.Spinner()
-
-        self.bulbs_combo = self.init_bulbs_combo()
 
         self.discovered_bulbs = []
         self.bulb_wrapper: BulbWrapper = None
@@ -94,7 +95,7 @@ class MainWindow(Gtk.ApplicationWindow):
             if self.loading:
                 return False
             if not control_only:
-                self.box.remove(self.bulbs_combo)
+                self.bulbs_selection_button.set_sensitive(False)
             if self.control_box:
                 self.box.remove(self.control_box)
             if self.no_result_box is not None:
@@ -118,33 +119,21 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.show_loading(False)
 
-        if len(self.discovered_bulbs) > 0:
-            self.bulbs_combo.remove_all()
+        self.bulbs_selection_button.fill_popover(bulbs=self.discovered_bulbs, listener=self.on_bulb_selected)
 
-            for bulb in self.discovered_bulbs:
-                self.bulbs_combo.append_text(bulb.get_bulb_display_text())
-                print(bulb.get_bulb_display_text())
-
-            self.box.pack_start(self.bulbs_combo, False, False, 6)
-            self.bulbs_combo.set_active(0)
-        else:
+        if len(self.discovered_bulbs) == 0:
             self.show_no_result()
             self.box.show_all()
 
-    def on_bulb_selected(self, combo):
-        tree_iter = combo.get_active_iter()
-        if tree_iter:
-            model = combo.get_model()
-            for bw in self.discovered_bulbs:
-                if bw.get_bulb_display_text() == model[tree_iter][0]:
-                    if self.bulb_wrapper != bw:
-                        self.bulb_wrapper = bw
-                        self.init_control_layout()
+    def on_bulb_selected(self, bulb_display_text):
+        for bw in self.discovered_bulbs:
+            if bw.get_bulb_display_text() == bulb_display_text:
+                if self.bulb_wrapper != bw:
+                    self.bulb_wrapper = bw
+                    self.init_control_layout()
 
-            print("Selected: bulb=%s" % self.bulb_wrapper.get_bulb_display_text())
-
-            self.show_loading(True, control_only=True)
-            self.bulb_wrapper.update_status(on_complete=self.bulb_connected)
+        self.show_loading(True, control_only=True)
+        self.bulb_wrapper.update_status(on_complete=self.bulb_connected)
 
     def bulb_connected(self):
         self.update_status_on_complete()
@@ -213,17 +202,11 @@ class MainWindow(Gtk.ApplicationWindow):
         refresh_button.add(image)
         header_bar.pack_end(refresh_button)
         refresh_button.connect('clicked', self.start_discovery)
+
+        self.bulbs_selection_button = BulbSelectionWidget(default_label='Select bulb')
+        header_bar.pack_start(self.bulbs_selection_button)
+
         return header_bar
-
-    def init_bulbs_combo(self):
-        bulbs_combo = Gtk.ComboBoxText()
-        bulbs_combo.set_entry_text_column(0)
-        bulbs_combo.connect("changed", self.on_bulb_selected)
-        bulbs_combo.set_hexpand(False)
-        bulbs_combo.set_halign(Gtk.Align.CENTER)
-        bulbs_combo.set_size_request(250, -1)
-        return bulbs_combo
-
 
 class BulbOptionRow(Gtk.ListBoxRow):
     def __init__(self):

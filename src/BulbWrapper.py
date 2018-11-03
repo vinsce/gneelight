@@ -64,7 +64,7 @@ class BulbWrapper:
         return res
 
     def get_bulb_display_text(self):
-        return self.bulb_ip + ":" + str(self.bulb_port) + ' (' + self.bulb_model + ')'
+        return self.bulb_ip + ' (' + self.bulb_model + ')'
 
     def stringify(self):
         to_dict = self.to_dict(exclude_none=True)

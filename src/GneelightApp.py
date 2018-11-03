@@ -6,7 +6,7 @@ import sys
 from constants import *
 from MainWindow import MainWindow
 
-from gi.repository import Gtk, Gio, Gdk
+from gi.repository import Gtk, Gio, Gdk, GLib
 from gi.repository.GdkPixbuf import Pixbuf
 
 
@@ -39,6 +39,8 @@ class GneelightApp(Gtk.Application):
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
+        GLib.set_application_name(APP_NAME)
+        GLib.set_prgname(APP_NAME)
 
         action = Gio.SimpleAction.new("about", None)
         action.connect("activate", self.on_about)

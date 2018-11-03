@@ -1,0 +1,54 @@
+{
+  "app-id": "me.vinsce.Gneelight",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "master",
+  "sdk": "org.gnome.Sdk",
+  "command": "/app/bin/runner.sh",
+  "finish-args": [
+    "--share=network",
+    "--socket=wayland",
+    "--socket=x11"
+  ],
+  "modules": [
+    {
+      "name": "cpython",
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://www.python.org/ftp/python/3.7.1/Python-3.7.1.tar.xz",
+          "sha256": "fa7e2b8e8c9402f192ad56dc4f814089d1c4466c97d780f5e5acc02c04243d6d"
+        }
+      ]
+    },
+    "python3-yeelight.json",
+    "python3-PyGObject.json",
+    {
+      "name": "Gneelight",
+      "buildsystem": "simple",
+      "build-commands": [
+        "cp -R src /app/src",
+        "install -D runner.sh /app/bin/runner.sh",
+        "install -D res/me.vinsce.Gneelight.desktop /app/share/applications/me.vinsce.Gneelight.desktop",
+        "install -D res/gneelight.png /app/share/icons/hicolor/256x256/apps/me.vinsce.Gneelight.png",
+        "install -D res/gneelight.png /app/res/gneelight.png"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "../src",
+          "dest": "src"
+        },
+        {
+          "type": "file",
+          "path": "../runner.sh"
+        },
+        {
+          "type": "dir",
+          "path": "../res",
+          "dest": "res"
+        }
+      ]
+    }
+  ]
+}
+

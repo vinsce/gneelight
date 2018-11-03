@@ -6,7 +6,7 @@ import sys
 from constants import *
 from MainWindow import MainWindow
 
-from gi.repository import Gtk, Gio, Gdk, GLib
+from gi.repository import Gtk, Gio, GLib
 from gi.repository.GdkPixbuf import Pixbuf
 
 

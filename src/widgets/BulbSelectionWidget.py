@@ -49,11 +49,6 @@ class BulbSelectionWidget(Gtk.MenuButton):
                 b.connect('toggled', self.bulb_clicked)
                 if not group:
                     group = b
-
-                b = Gtk.RadioButton.new_with_label_from_widget(label=bulb.get_bulb_display_text(), radio_group_member=group)
-
-                self.bulbs_popover_box.pack_start(b, False, False, 4)
-                b.connect('toggled', self.bulb_clicked)
             group.set_active(True)
             group.toggled()
             self.set_sensitive(True)

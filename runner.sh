@@ -1,2 +1,2 @@
 #!/bin/sh
-python3 /app/Gneelight/src/GneelightApp.py
+python3 /app/src/GneelightApp.py

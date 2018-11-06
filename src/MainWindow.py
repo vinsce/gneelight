@@ -3,7 +3,7 @@ from widgets.BulbSelectionWidget import BulbSelectionWidget
 
 gi.require_version('Gtk', '3.0')
 
-from BulbWrapper import BulbWrapper, ColorModes
+from BulbWrapper import BulbWrapper, ColorModes, Effect
 from constants import *
 from utils.color_utils import parse_rgb
 from utils.widget_utils import drop_scroll_event
@@ -79,6 +79,9 @@ class MainWindow(Gtk.ApplicationWindow):
             row4.set_content(Gtk.Label(label="Color", xalign=0), self.color_button, control_expand=False)
             control_box.add(row4)
 
+        self.action_bar = ActionBar(self.effect_changed)
+        control_box_container.pack_end(self.action_bar, False, False, 0)
+
         # Make the control box scrollable
         control_box_container.pack_start(control_box, True, True, 0)
         scrollable_win = Gtk.ScrolledWindow()
@@ -86,6 +89,9 @@ class MainWindow(Gtk.ApplicationWindow):
         self.control_box = scrollable_win
 
         # noinspection PyUnusedLocal
+
+    def effect_changed(self, effect: Effect, duration):
+        self.bulb_wrapper.set_transition_effect(effect, duration)
 
     def toggle_bulb(self, widget, status):
         self.bulb_wrapper.toggle(status=status, on_complete=self.update_status_on_complete)
@@ -169,6 +175,7 @@ class MainWindow(Gtk.ApplicationWindow):
                 self.color_button.set_rgba(parse_rgb(self.bulb_wrapper.bulb_status.rgb))
             else:
                 self.color_button.set_rgba(RGBA())
+        self.action_bar.set_mode(self.bulb_wrapper.get_transition_effect(), notify=False, duration=self.bulb_wrapper.get_bulb().duration)
 
         self.show_all()
 
@@ -207,6 +214,7 @@ class MainWindow(Gtk.ApplicationWindow):
         header_bar.pack_start(self.bulbs_selection_button)
 
         return header_bar
+
 
 class BulbOptionRow(Gtk.ListBoxRow):
     def __init__(self):
@@ -264,3 +272,57 @@ class BulbInfoRow(Gtk.ListBoxRow):
             self.grid.remove_row(i)  # Remove unused widgets
 
         self.show_all()
+
+
+class ActionBar(Gtk.ActionBar):
+    def __init__(self, listener):
+        super().__init__()
+        self.listener = listener
+        mode_label = Gtk.Label(label='Effect ')
+        mode_label.set_margin_start(16)
+        buttons_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        self.button_sudden = Gtk.RadioButton.new_with_label_from_widget(radio_group_member=None, label='sudden')
+        self.button_sudden.connect("toggled", self.on_mode_toggled, Effect.SUDDEN)
+        self.button_sudden.set_mode(draw_indicator=False)
+
+        self.button_smooth = Gtk.RadioButton.new_with_label_from_widget(radio_group_member=self.button_sudden, label='smooth')
+        self.button_smooth.connect("toggled", self.on_mode_toggled, Effect.SMOOTH)
+        self.button_smooth.set_mode(draw_indicator=False)
+
+        buttons_box.pack_start(self.button_sudden, True, True, 0)
+        buttons_box.pack_start(self.button_smooth, True, True, 0)
+        self.pack_start(mode_label)
+        self.pack_start(buttons_box)
+
+        self.duration_button = Gtk.SpinButton.new_with_range(min=0, step=10, max=5000)
+        self.duration_button.connect('value-changed', self.on_duration_changed)
+        self.duration_button.connect("scroll-event", drop_scroll_event)
+        self.duration_label = Gtk.Label(label="Duration (ms)")
+        self.duration_label.set_margin_start(32)
+
+    def on_mode_toggled(self, widget, mode: Effect):
+        self.set_mode(mode)
+
+    def on_duration_changed(self, widget):
+        self.listener(Effect.SMOOTH, self.duration_button.get_value())
+
+    def set_mode(self, mode: Effect, notify=True, duration=None):
+        is_smooth = mode == Effect.SMOOTH
+
+        if notify:
+            self.listener(mode, self.duration_button.get_value())
+        else:
+            if is_smooth and not self.button_smooth.get_active():
+                self.button_smooth.set_active(True)
+            elif not is_smooth and not self.button_sudden.get_active():
+                self.button_sudden.set_active(True)
+
+        if is_smooth and not self.duration_label.get_parent():
+            self.pack_start(self.duration_label)
+            self.pack_start(self.duration_button)
+        elif not is_smooth:
+            self.remove(self.duration_label)
+            self.remove(self.duration_button)
+
+        if duration and is_smooth:
+            self.duration_button.set_value(duration)

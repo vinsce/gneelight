@@ -1,5 +1,5 @@
 [Desktop Entry]
 Name=Gneelight
-Exec=/app/Gneelight/bin/runner.sh
+Exec=runner.sh
 Type=Application
 Icon=me.vinsce.Gneelight

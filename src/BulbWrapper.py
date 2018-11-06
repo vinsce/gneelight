@@ -17,6 +17,11 @@ class ColorModes(Enum):
         return self.name.lower() + ' (' + str(self.value) + ')'
 
 
+class Effect(Enum):
+    SUDDEN = 0
+    SMOOTH = 1
+
+
 class BulbStatus:
     def __init__(self, bulb_status):
         self.power = bulb_status.get('power')
@@ -129,6 +134,15 @@ class BulbWrapper:
             self.get_bulb().turn_off()
         self.update_status_sync()
         idle_add(on_complete)
+
+    def set_transition_effect(self, effect: Effect, duration=None):
+        self.get_bulb().effect = effect.name.lower()
+        if effect == Effect.SMOOTH:
+            self.get_bulb().duration = duration
+
+    def get_transition_effect(self):
+        effect = self.get_bulb().effect
+        return Effect.SMOOTH if effect == Effect.SMOOTH.name.lower() else Effect.SUDDEN
 
     @staticmethod
     def discovery_bulbs(on_complete):

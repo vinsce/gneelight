@@ -128,7 +128,9 @@ class BulbWrapper:
         run_in_thread(target=self.toggle_sync, status=status, on_complete=on_complete)
 
     def toggle_sync(self, status, on_complete):
-        if status:
+        if status is None:
+            self.get_bulb().toggle()
+        elif status:
             self.get_bulb().turn_on()
         else:
             self.get_bulb().turn_off()

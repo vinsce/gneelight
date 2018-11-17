@@ -2,13 +2,14 @@ import gi
 from widgets.BulbSelectionWidget import BulbSelectionWidget
 
 gi.require_version('Gtk', '3.0')
+gi.require_version('AppIndicator3', '0.1')
 
 from BulbWrapper import BulbWrapper, ColorModes, Effect
 from constants import *
 from utils.color_utils import parse_rgb
-from utils.widget_utils import drop_scroll_event
+from utils.widget_utils import drop_scroll_event, dummy_listener
 
-from gi.repository import Gtk, Gio
+from gi.repository import Gtk, Gio, AppIndicator3
 from gi.overrides.Gdk import RGBA
 
 
@@ -41,6 +42,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.loading = False
 
         self.start_discovery()
+
+        self.indicator = self.init_indicator()
 
     # noinspection PyAttributeOutsideInit
     def init_control_layout(self):
@@ -93,8 +96,9 @@ class MainWindow(Gtk.ApplicationWindow):
     def effect_changed(self, effect: Effect, duration):
         self.bulb_wrapper.set_transition_effect(effect, duration)
 
-    def toggle_bulb(self, widget, status):
-        self.bulb_wrapper.toggle(status=status, on_complete=self.update_status_on_complete)
+    def toggle_bulb(self, widget, status=None):
+        if self.bulb_wrapper:
+            self.bulb_wrapper.toggle(status=status, on_complete=self.update_status_on_complete if self.is_visible() else dummy_listener)
 
     def show_loading(self, loading, control_only=False):
         if loading:
@@ -214,6 +218,47 @@ class MainWindow(Gtk.ApplicationWindow):
         header_bar.pack_start(self.bulbs_selection_button)
 
         return header_bar
+
+    def init_indicator(self):
+        indicator = AppIndicator3.Indicator.new(APP_NAME, APP_ICON, AppIndicator3.IndicatorCategory.APPLICATION_STATUS)
+        indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+
+        indicator.set_menu(self.create_appindicator_menu())
+
+        self.connect('delete-event', self.minimize_to_appindicator)
+
+        return indicator
+
+    def minimize_to_appindicator(self, e=None, e2=None):
+        self.hide()
+        return True
+
+    def create_appindicator_menu(self):
+        menu = Gtk.Menu()
+
+        item_show_window = Gtk.MenuItem("Show Gneelight")
+        item_show_window.connect('activate', self.show_self)
+
+        item_toggle = Gtk.MenuItem("Toggle light")
+        item_toggle.connect('activate', self.toggle_bulb)
+
+        item_quit = Gtk.MenuItem('Quit')
+        item_quit.connect('activate', self.quit)
+
+        menu.append(item_show_window)
+        menu.append(item_toggle)
+        menu.append(item_quit)
+
+        menu.show_all()
+        return menu
+
+    def show_self(self, e):
+        if not self.is_visible():
+            self.show_all()
+            self.update_status()
+
+    def quit(self, e):
+        self.destroy()
 
 
 class BulbOptionRow(Gtk.ListBoxRow):

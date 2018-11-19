@@ -15,6 +15,7 @@
           <option value="gi.repository.Gtk.Switch.props" />
           <option value="gi.repository.Gtk.HeaderBar.props" />
           <option value="gi.require_version" />
+          <option value="gi.repository.Gtk.Application.on_about" />
         </list>
       </option>
     </inspection_tool>

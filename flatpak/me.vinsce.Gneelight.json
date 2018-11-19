@@ -7,7 +7,12 @@
   "finish-args": [
     "--share=network",
     "--socket=wayland",
-    "--socket=x11"
+    "--socket=x11",
+    "--filesystem=xdg-run/dconf",
+    "--filesystem=~/.config/dconf:ro",
+    "--talk-name=ca.desrt.dconf",
+    "--env=DCONF_USER_CONFIG_DIR=.config/dconf",
+    "--env=GSETTINGS_SCHEMA_DIR=/app/share/glib-2.0/schemas"
   ],
   "modules": [
     {
@@ -20,6 +25,7 @@
         }
       ]
     },
+    "libappindicator-gtk3-12.10.json",
     "python3-yeelight.json",
     "python3-PyGObject.json",
     {
@@ -47,8 +53,12 @@
           "path": "../res",
           "dest": "res"
         }
+      ],
+      "post-install": [
+        "mkdir -p /app/share/glib-2.0/schemas",
+        "cp res/me.vinsce.Gneelight.gschema.xml /app/share/glib-2.0/schemas",
+        "glib-compile-schemas /app/share/glib-2.0/schemas"
       ]
     }
   ]
 }
-

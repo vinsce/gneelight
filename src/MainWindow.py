@@ -1,4 +1,6 @@
+from SettingsDialog import SettingsDialog
 import gi
+from widgets.MenuWidget import MenuWidget
 from widgets.BulbSelectionWidget import BulbSelectionWidget
 
 gi.require_version('Gtk', '3.0')
@@ -11,9 +13,6 @@ from utils.widget_utils import drop_scroll_event, dummy_listener
 
 from gi.repository import Gtk, Gio, AppIndicator3
 from gi.overrides.Gdk import RGBA
-
-
-# TODO add predefined options
 
 
 # noinspection PyArgumentList
@@ -42,6 +41,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.loading = False
 
         self.start_discovery()
+
+        self.settings = Gio.Settings(APP_ID)
 
         self.indicator = self.init_indicator()
 
@@ -211,13 +212,29 @@ class MainWindow(Gtk.ApplicationWindow):
         icon = Gio.ThemedIcon(name="view-refresh-symbolic")
         image = Gtk.Image.new_from_gicon(icon, Gtk.IconSize.BUTTON)
         refresh_button.add(image)
-        header_bar.pack_end(refresh_button)
         refresh_button.connect('clicked', self.start_discovery)
+
+        menu_button = MenuWidget(self, self.menu_item_clicked)
+
+        header_bar.pack_end(menu_button)
+        header_bar.pack_end(refresh_button)
 
         self.bulbs_selection_button = BulbSelectionWidget(default_label='Select bulb')
         header_bar.pack_start(self.bulbs_selection_button)
 
         return header_bar
+
+    def menu_item_clicked(self, b):
+        if b == 'settings':
+            self.show_settings_dialog()
+        elif b == 'about':
+            self.get_application().on_about(None, None)
+
+    def show_settings_dialog(self):
+        settings_dialog = SettingsDialog(parent=self)
+        settings_dialog.set_modal(True)
+        settings_dialog.run()
+        settings_dialog.destroy()
 
     def init_indicator(self):
         indicator = AppIndicator3.Indicator.new(APP_NAME, APP_ICON, AppIndicator3.IndicatorCategory.APPLICATION_STATUS)
@@ -230,8 +247,11 @@ class MainWindow(Gtk.ApplicationWindow):
         return indicator
 
     def minimize_to_appindicator(self, e=None, e2=None):
-        self.hide()
-        return True
+        if self.settings.get_boolean('enable-appindicator') and self.bulb_wrapper:
+            self.hide()
+            return True
+        else:
+            return False
 
     def create_appindicator_menu(self):
         menu = Gtk.Menu()

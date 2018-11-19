@@ -1,0 +1,10 @@
+<schemalist>
+    <schema id="me.vinsce.gneelight" path="/me/vinsce/Gneelight/" >
+
+        <key type="b" name="enable-appindicator">
+            <default>true</default>
+            <summary>Minimize to AppIndicator</summary>
+            <description>Minimize the application to AppIndicator when the close button is pressed</description>
+        </key>
+    </schema>
+</schemalist>

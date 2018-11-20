@@ -243,7 +243,6 @@ class MainWindow(Gtk.ApplicationWindow):
         indicator.set_menu(self.create_appindicator_menu())
 
         self.connect('delete-event', self.minimize_to_appindicator)
-
         return indicator
 
     def minimize_to_appindicator(self, e=None, e2=None):
@@ -266,7 +265,10 @@ class MainWindow(Gtk.ApplicationWindow):
         item_quit.connect('activate', self.quit)
 
         menu.append(item_show_window)
+        menu.append(Gtk.SeparatorMenuItem())
         menu.append(item_toggle)
+
+        menu.append(Gtk.SeparatorMenuItem())
         menu.append(item_quit)
 
         menu.show_all()

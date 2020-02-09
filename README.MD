@@ -11,6 +11,9 @@ flatpak install --user gneelight.flatpak
 ```
 Alternatively download the entire source and run
 ```bash
+sudo cp res/me.vinsce.Gneelight.gschema.xml /usr/share/glib-2.0/schemas/
+sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
+
 python3 src/GneelightApp.py
 ```
 

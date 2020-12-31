@@ -358,6 +358,8 @@ class ActionBar(Gtk.ActionBar):
 
         buttons_box.pack_start(self.button_sudden, True, True, 0)
         buttons_box.pack_start(self.button_smooth, True, True, 0)
+
+        buttons_box.get_style_context().add_class('linked')
         self.pack_start(mode_label)
         self.pack_start(buttons_box)
 

@@ -1,0 +1,2 @@
+yeelight==0.4.3
+PyGObject==3.38.0

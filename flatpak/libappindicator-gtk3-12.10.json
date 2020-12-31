@@ -1,7 +1,7 @@
 {
   "name": "libappindicator",
   "build-options": {
-    "cflags": "-Wno-error=deprecated-declarations"
+    "cflags": "-Wno-error"
   },
   "rm-configure": true,
   "config-opts": [
@@ -30,18 +30,26 @@
       "path": "libappindicator-ftbfs.patch"
     },
     {
-      "type": "shell",
-      "commands": [
-        "# Disable python bindings",
-        "sed -e '/APPINDICATOR_PYTHON/,/\\$PYGTK_CODEGEN/ d' -i configure.ac",
-        "sed -e '/bindings/ d' -e '/example/ d' -i Makefile.am"
-      ]
+      "type": "patch",
+      "path": "libappindicator-no-python.patch"
+    },
+    {
+      "type": "patch",
+      "path": "libappindicator-fix-crash-from-incorrect-signal-emission.patch"
+    },
+    {
+      "type": "script",
+      "commands": ["autoreconf -sfi"],
+      "dest-filename": "autogen.sh"
     }
   ],
   "modules": [
+    "intltool-0.51.json",
+    "dbus-glib-0.110.json",
     {
       "name": "libdbusmenu",
       "build-options": {
+        "cflags": "-Wno-error",
         "env": {
           "HAVE_VALGRIND_FALSE": "#",
           "HAVE_VALGRIND_TRUE": ""
@@ -77,7 +85,7 @@
     {
       "name": "libindicator",
       "build-options": {
-        "cflags": "-Wno-error=deprecated-declarations"
+        "cflags": "-Wno-error"
       },
       "cleanup": [
         "/include",
@@ -105,6 +113,11 @@
             "# FTBFS fix",
             "sed -e '/LIBINDICATOR_LIBS/ s/\\$LIBM/ $LIBM/' -i configure.ac"
           ]
+        },
+        {
+          "type": "script",
+          "commands": ["autoreconf -sfi"],
+          "dest-filename": "autogen.sh"
         }
       ]
     }

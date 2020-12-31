@@ -1,7 +1,7 @@
 {
   "app-id": "me.vinsce.Gneelight",
   "runtime": "org.gnome.Platform",
-  "runtime-version": "master",
+  "runtime-version": "3.38",
   "sdk": "org.gnome.Sdk",
   "command": "/app/bin/runner.sh",
   "finish-args": [
@@ -15,16 +15,6 @@
     "--env=GSETTINGS_SCHEMA_DIR=/app/share/glib-2.0/schemas"
   ],
   "modules": [
-    {
-      "name": "cpython",
-      "sources": [
-        {
-          "type": "archive",
-          "url": "https://www.python.org/ftp/python/3.7.1/Python-3.7.1.tar.xz",
-          "sha256": "fa7e2b8e8c9402f192ad56dc4f814089d1c4466c97d780f5e5acc02c04243d6d"
-        }
-      ]
-    },
     "libappindicator-gtk3-12.10.json",
     "python3-yeelight.json",
     "python3-PyGObject.json",

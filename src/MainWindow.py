@@ -1,7 +1,8 @@
-from SettingsDialog import SettingsDialog
 import gi
-from widgets.MenuWidget import MenuWidget
+
+from SettingsDialog import SettingsDialog
 from widgets.BulbSelectionWidget import BulbSelectionWidget
+from widgets.MenuWidget import MenuWidget
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('AppIndicator3', '0.1')
@@ -13,6 +14,19 @@ from utils.widget_utils import drop_scroll_event, dummy_listener
 
 from gi.repository import Gtk, Gio, AppIndicator3
 from gi.overrides.Gdk import RGBA
+
+import logging
+import sys
+
+
+# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# handler.setFormatter(formatter)
+
+log = logging.getLogger('MainWindow')
+log.setLevel(logging.DEBUG)
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.DEBUG)
+log.addHandler(ch)
 
 
 # noinspection PyArgumentList
@@ -63,7 +77,8 @@ class MainWindow(Gtk.ApplicationWindow):
         control_box.add(row)
 
         row2 = BulbOptionRow()
-        self.brightness_slider = Gtk.Scale.new_with_range(orientation=Gtk.Orientation.HORIZONTAL, min=1, max=100, step=1)
+        self.brightness_slider = Gtk.Scale.new_with_range(orientation=Gtk.Orientation.HORIZONTAL, min=1, max=100,
+                                                          step=1)
         self.brightness_slider.connect("button-release-event", self.change_brightness)
         self.brightness_slider.connect("scroll-event", drop_scroll_event)
         row2.set_content(Gtk.Label(label="Brightness", xalign=0), self.brightness_slider)
@@ -99,9 +114,11 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def toggle_bulb(self, widget, status=None):
         if self.bulb_wrapper:
-            self.bulb_wrapper.toggle(status=status, on_complete=self.update_status_on_complete if self.is_visible() else dummy_listener)
+            self.bulb_wrapper.toggle(status=status,
+                                     on_complete=self.update_status_on_complete if self.is_visible() else dummy_listener)
 
     def show_loading(self, loading, control_only=False):
+        log.info(f"Show loading {loading} (control_only = {control_only}). Current loading status: {self.loading}")
         if loading:
             if self.loading:
                 return False
@@ -122,26 +139,39 @@ class MainWindow(Gtk.ApplicationWindow):
 
     # noinspection PyUnusedLocal
     def start_discovery(self, widget=None):
+        log.debug("Discovery start requested")
         if self.show_loading(True):
+            log.info("Start bulb discovery")
             BulbWrapper.discovery_bulbs(on_complete=self.discovered)
+        else:
+            log.info("Skipping discovery. Status is already 'loading'")
 
     def discovered(self, wrappers):
         self.discovered_bulbs = wrappers or []
-
+        log.info(f"Discovered {self.discovered_bulbs} bulbs")
+        for db in self.discovered_bulbs:
+            log.debug(db.stringify())
         self.show_loading(False)
 
         self.bulbs_selection_button.fill_popover(bulbs=self.discovered_bulbs, listener=self.on_bulb_selected)
 
         if len(self.discovered_bulbs) == 0:
+            log.debug("Empty bulbs list. Cleaning UI...")
             self.show_no_result()
             self.box.show_all()
 
     def on_bulb_selected(self, bulb_display_text):
+        log.info(f"Selected bulb {bulb_display_text}")
         for bw in self.discovered_bulbs:
             if bw.get_bulb_display_text() == bulb_display_text:
+                log.debug("Found requested bulb")
                 if self.bulb_wrapper != bw:
+                    log.debug("Showing new selected bulb")
                     self.bulb_wrapper = bw
                     self.init_control_layout()
+
+        if self.bulb_wrapper is None or self.bulb_wrapper.get_bulb_display_text() != bulb_display_text:
+            log.warning(f"Selected bulb {bulb_display_text} not found in discovered bulbs list")
 
         self.show_loading(True, control_only=True)
         self.bulb_wrapper.update_status(on_complete=self.bulb_connected)
@@ -164,7 +194,8 @@ class MainWindow(Gtk.ApplicationWindow):
 
     # noinspection PyUnusedLocal
     def change_delay_off(self, widget):
-        self.bulb_wrapper.change_delay_off(delay=self.delay_spin_button.get_value(), on_complete=self.update_status_on_complete)
+        self.bulb_wrapper.change_delay_off(delay=self.delay_spin_button.get_value(),
+                                           on_complete=self.update_status_on_complete)
 
     def update_status(self):
         self.bulb_wrapper.update_status(self.update_status_on_complete)
@@ -180,7 +211,8 @@ class MainWindow(Gtk.ApplicationWindow):
                 self.color_button.set_rgba(parse_rgb(self.bulb_wrapper.bulb_status.rgb))
             else:
                 self.color_button.set_rgba(RGBA())
-        self.action_bar.set_mode(self.bulb_wrapper.get_transition_effect(), notify=False, duration=self.bulb_wrapper.get_bulb().duration)
+        self.action_bar.set_mode(self.bulb_wrapper.get_transition_effect(), notify=False,
+                                 duration=self.bulb_wrapper.get_bulb().duration)
 
         self.show_all()
 
@@ -352,7 +384,8 @@ class ActionBar(Gtk.ActionBar):
         self.button_sudden.connect("toggled", self.on_mode_toggled, Effect.SUDDEN)
         self.button_sudden.set_mode(draw_indicator=False)
 
-        self.button_smooth = Gtk.RadioButton.new_with_label_from_widget(radio_group_member=self.button_sudden, label='smooth')
+        self.button_smooth = Gtk.RadioButton.new_with_label_from_widget(radio_group_member=self.button_sudden,
+                                                                        label='smooth')
         self.button_smooth.connect("toggled", self.on_mode_toggled, Effect.SMOOTH)
         self.button_smooth.set_mode(draw_indicator=False)
 
@@ -370,6 +403,7 @@ class ActionBar(Gtk.ActionBar):
         self.duration_label.set_margin_start(32)
 
     def on_mode_toggled(self, widget, mode: Effect):
+        log.debug(f"Changing  mode: {mode}")
         self.set_mode(mode)
 
     def on_duration_changed(self, widget):

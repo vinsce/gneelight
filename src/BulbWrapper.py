@@ -1,10 +1,10 @@
 from enum import Enum
 
 from gi.overrides.Gdk import RGBA
+from gi.repository.GLib import idle_add
 from yeelight import Bulb, discover_bulbs
 from yeelight.enums import CronType
 
-from gi.repository.GLib import idle_add
 from utils.thread_utils import run_in_thread
 
 

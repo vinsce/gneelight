@@ -2,23 +2,23 @@
     "name": "python3-yeelight",
     "buildsystem": "simple",
     "build-commands": [
-        "pip3 install --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} yeelight"
+        "pip3 install --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} yeelight==0.5.4"
     ],
     "sources": [
         {
             "type": "file",
-            "url": "https://files.pythonhosted.org/packages/90/52/e20466b85000a181e1e144fd8305caf2cf475e2f9674e797b222f8105f5f/future-0.17.1.tar.gz",
-            "sha256": "67045236dcfd6816dc439556d009594abf643e5eb48992e36beac09c2ca659b8"
+            "url": "https://files.pythonhosted.org/packages/45/0b/38b06fd9b92dc2b68d58b75f900e97884c45bedd2ff83203d933cf5851c9/future-0.18.2.tar.gz",
+            "sha256": "b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"
         },
         {
             "type": "file",
-            "url": "https://files.pythonhosted.org/packages/95/6e/26bdcba28b66126f66cf3e4cd03bcd63f7ae330d29ee68b1f6b623550bfa/enum-compat-0.0.2.tar.gz",
-            "sha256": "939ceff18186a5762ae4db9fa7bfe017edbd03b66526b798dd8245394c8a4192"
+            "url": "https://files.pythonhosted.org/packages/3d/fc/4ce147e3997cd0ea470ad27112087545cf83bf85015ddb3054673cb471bb/ifaddr-0.1.7.tar.gz",
+            "sha256": "1f9e8a6ca6f16db5a37d3356f07b6e52344f6f9f7e806d618537731669eb1a94"
         },
         {
             "type": "file",
-            "url": "https://files.pythonhosted.org/packages/fa/d6/bf37b47cd02ae3c2e595fd4879ea53179ff618dcc71f20a27a8261c3401a/yeelight-0.4.3.tar.gz",
-            "sha256": "f0f8a28fded646718242535dcfa454a7629fb495a1808f67df5af18bc57becd6"
+            "url": "https://files.pythonhosted.org/packages/12/b0/1910073e3a1cd1c72f9408a210283c9cbcf214c9ec9809b50e00724c2070/yeelight-0.5.4-py3-none-any.whl",
+            "sha256": "1e4c045ef636f5996ab4545e2a54a37f66acd5c97b9305b42cde1a3a4f596d46"
         }
     ]
 }

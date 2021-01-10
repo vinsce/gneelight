@@ -177,6 +177,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.bulb_wrapper.update_status(on_complete=self.bulb_connected)
 
     def bulb_connected(self):
+        log.info("Bulb connected")
         self.update_status_on_complete()
         self.show_loading(False, control_only=True)
         if not self.control_box.get_parent():
@@ -201,6 +202,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.bulb_wrapper.update_status(self.update_status_on_complete)
 
     def update_status_on_complete(self):
+        log.debug("Updating UI with bulb")
         self.row_info.update_content(self.bulb_wrapper)
         self.power_switch.set_active(self.bulb_wrapper.bulb_status.power == 'on')
         self.brightness_slider.set_value(self.bulb_wrapper.bulb_status.bright)
@@ -213,7 +215,7 @@ class MainWindow(Gtk.ApplicationWindow):
                 self.color_button.set_rgba(RGBA())
         self.action_bar.set_mode(self.bulb_wrapper.get_transition_effect(), notify=False,
                                  duration=self.bulb_wrapper.get_bulb().duration)
-
+        log.debug("Updated UI with bulb")
         self.show_all()
 
     def show_no_result(self):

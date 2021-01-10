@@ -1,2 +1,2 @@
-yeelight==0.4.3
+yeelight==0.5.4
 PyGObject==3.38.0

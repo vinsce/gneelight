@@ -11,9 +11,18 @@ jobs:
       image: bilelmoussaoui/flatpak-github-actions:gnome-3.38
       options: --privileged
     steps:
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install gir1.2-appindicator3-0.1
     - uses: actions/checkout@v2
     - uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
       with:
         bundle: gneelight.flatpak
         manifest-path: flatpak/me.vinsce.Gneelight.json
         cache-key: flatpak-builder-${{ github.sha }}
+    - run: ls
+    # - uses: softprops/action-gh-release@v1
+    #   if: startsWith(github.ref, 'refs/tags/')
+    #   with:
+    #     files: gneelignt.flatpak

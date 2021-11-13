@@ -20,7 +20,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build flatpak package
       run: |
-        mkdi repo
+        mkdir repo
         cd flatpak
         ./flatbuild.sh
         ls -l

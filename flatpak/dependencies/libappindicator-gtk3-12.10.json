@@ -31,10 +31,6 @@
     },
     {
       "type": "patch",
-      "path": "libappindicator-no-python.patch"
-    },
-    {
-      "type": "patch",
       "path": "libappindicator-fix-crash-from-incorrect-signal-emission.patch"
     },
     {

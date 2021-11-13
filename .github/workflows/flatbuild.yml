@@ -15,7 +15,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y flatpak flatpak-builder
-        flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        flatpak --user remote-add --if-not-exists --from flathub https://flathub.org/repo/flathub.flatpakrepo
         flatpak --user install flathub org.gnome.Platform//3.38
     - uses: actions/checkout@v2
     - name: Build flatpak package

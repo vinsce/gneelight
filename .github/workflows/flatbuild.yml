@@ -15,5 +15,5 @@ jobs:
     - uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
       with:
         bundle: gneelight.flatpak
-        manifest-path: flatpack/me.vinsce.Gneelight.json
+        manifest-path: flatpak/me.vinsce.Gneelight.json
         cache-key: flatpak-builder-${{ github.sha }}

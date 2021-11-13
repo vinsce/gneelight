@@ -5,7 +5,7 @@ Written in Python and GTK+ 3 using the [Yeelight Python](https://github.com/skor
 
 ## Installation
 
-### Install using Flatpack (recommended)
+### Install using Flatpak (recommended)
 The simplest way to install Gneelight is by using the provided Flatpak package:
 ```bash
 wget https://github.com/vinsce/gneelight/blob/master/flatpak/gneelight.flatpak?raw=true -O gneelight.flatpak

@@ -16,7 +16,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y flatpak flatpak-builder
         flatpak --user remote-add --if-not-exists --from flathub https://flathub.org/repo/flathub.flatpakrepo
-        # flatpak --user install -y --noninteractive flathub org.gnome.Platform//3.38
+        flatpak --user install -y --noninteractive flathub org.gnome.Platform//3.38
         flatpak --user install -y --noninteractive flathub org.gnome.Sdk//3.38
     - uses: actions/checkout@v2
     - name: Build flatpak package

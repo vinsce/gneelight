@@ -6,32 +6,22 @@ name: Flatbuild
 jobs:
   flatpak:
     name: "Flatpak"
-    runs-on: ubuntu-latest
-    #container:
-    #  image: bilelmoussaoui/flatpak-github-actions:gnome-3.38
-    #  options: --privileged
+    runs-on: ubuntu-18.04
     steps:
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y flatpak flatpak-builder
-        sudo flatpak remote-add --if-not-exists --from flathub https://flathub.org/repo/flathub.flatpakrepo
-        sudo flatpak install -y --noninteractive flathub org.gnome.Platform//3.38
-        sudo flatpak install -y --noninteractive flathub org.gnome.Sdk//3.38
+        flatpak --user remote-add --if-not-exists --from flathub https://flathub.org/repo/flathub.flatpakrepo
+        flatpak --user install -y --noninteractive flathub org.gnome.Platform//3.38
+        flatpak --user install -y --noninteractive flathub org.gnome.Sdk//3.38
     - uses: actions/checkout@v2
     - name: Build flatpak package
       run: |
         mkdir repo
         cd flatpak
-        sudo ./flatbuild.sh
+        ./flatbuild.sh
         ls -l
-#    - name: Build flatpak package
-#      uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
-#      with:
-#        bundle: gneelight.flatpak
-#        manifest-path: flatpak/me.vinsce.Gneelight.json
-#        cache-key: flatpak-builder-${{ github.sha }}
-    - run: ls -l
     # - uses: softprops/action-gh-release@v1
     #   if: startsWith(github.ref, 'refs/tags/')
     #   with:

@@ -19,6 +19,10 @@ jobs:
         flatpak --user install -y --noninteractive flathub org.gnome.Platform//3.38
         flatpak --user install -y --noninteractive flathub org.gnome.Sdk//3.38
     - uses: actions/checkout@v2
+    - name: Use action to check for CRLF endings
+      uses: erclu/check-crlf@v1
+      with: # omit this mapping to use default path
+        path: ./flatpak
     - name: Build flatpak package
       run: |
         mkdir repo

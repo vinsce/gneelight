@@ -27,8 +27,7 @@
     },
     {
       "type": "patch",
-      "path": "libappindicator-ftbfs.patch",
-      "use-git":  true
+      "path": "libappindicator-ftbfs.patch"
     },
     {
       "type": "patch",

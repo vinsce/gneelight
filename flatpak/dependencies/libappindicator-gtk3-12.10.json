@@ -38,6 +38,10 @@
       "path": "libappindicator-fix-crash-from-incorrect-signal-emission.patch"
     },
     {
+      "type": "patch",
+      "path": "libappindicator-fix-crash-iterating-icon-themes.patch"
+    },
+    {
       "type": "script",
       "commands": ["autoreconf -sfi"],
       "dest-filename": "autogen.sh"
@@ -45,7 +49,7 @@
   ],
   "modules": [
     "intltool-0.51.json",
-    "dbus-glib-0.110.json",
+    "dbus-glib.json",
     {
       "name": "libdbusmenu",
       "build-options": {

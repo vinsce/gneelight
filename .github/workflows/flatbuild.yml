@@ -12,9 +12,10 @@ jobs:
       options: --privileged
     steps:
     - name: Install dependencies
-      run: dnf install libappindicator-gtk3
+      run: dnf install -y libappindicator-gtk3
     - uses: actions/checkout@v2
-    - uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
+    - name: Build flatpak package
+      uses: bilelmoussaoui/flatpak-github-actions/flatpak-builder@v4
       with:
         bundle: gneelight.flatpak
         manifest-path: flatpak/me.vinsce.Gneelight.json

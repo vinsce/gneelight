@@ -16,6 +16,8 @@ jobs:
         flatpak --user install -y flathub org.gnome.Platform//3.38
         flatpak --user install -y flathub org.gnome.Sdk//3.38
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Build flatpak package
       run: |
         mkdir repo

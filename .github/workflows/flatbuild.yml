@@ -12,7 +12,9 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y flatpak flatpak-builder
-        flatpak remote-add --if-not-exists --from flathub https://flathub.org/repo/flathub.flatpakrepo
+        flatpak remote-add --user --if-not-exists --from flathub https://flathub.org/repo/flathub.flatpakrepo
+        flatpak --user install -y flathub org.gnome.Platform//40
+        flatpak --user install -y flathub org.gnome.Sdk//40
     - uses: actions/checkout@v2
       with:
         submodules: true

@@ -27,7 +27,7 @@ If you want to install from the source code, first make sure you have the follow
 In Ubuntu, you can install the dependencies using:
 ```
 sudo apt-get install gir1.2-appindicator3-0.1
-pip install yeelight
+pip install -r requirements.txt
 ```
 
 then clone this repository and start using Gneelignt:

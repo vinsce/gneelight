@@ -11,7 +11,10 @@ RUN cd /opt \
 
 RUN flatpak remote-add --if-not-exists --from flathub https://flathub.org/repo/flathub.flatpakrepo \
     && flatpak install -y flathub org.gnome.Platform//40 \
-    && flatpak install -y flathub org.gnome.Sdk//40 \
+    && flatpak install -y flathub org.gnome.Sdk//40
 
-RUN cd /opt/gneelight/flatpak && \
-    ./flatbuild.sh
+WORKDIR /opt/gneelight/
+
+# docker build -t gneelight-build-ubuntu -f Dockerfile .
+# docker container run --privileged --rm -it --name gneelight-build gneelight-build-ubuntu /bin/bash
+# ./flatbuild.sh

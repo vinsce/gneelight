@@ -31,4 +31,3 @@ jobs:
       with:
         files: |
           flatpak/gneelight.flatpak
-          gneelight.flatpak

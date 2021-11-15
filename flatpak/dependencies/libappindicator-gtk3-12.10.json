@@ -27,19 +27,19 @@
     },
     {
       "type": "patch",
-      "path": "libappindicator-ftbfs.patch"
+      "path": "../shared-modules/libappindicator/libappindicator-ftbfs.patch"
     },
     {
       "type": "patch",
-      "path": "libappindicator-no-python.patch"
+      "path": "../shared-modules/libappindicator/libappindicator-no-python.patch"
     },
     {
       "type": "patch",
-      "path": "libappindicator-fix-crash-from-incorrect-signal-emission.patch"
+      "path": "../shared-modules/libappindicator/libappindicator-fix-crash-from-incorrect-signal-emission.patch"
     },
     {
       "type": "patch",
-      "path": "libappindicator-fix-crash-iterating-icon-themes.patch"
+      "path": "../shared-modules/libappindicator/libappindicator-fix-crash-iterating-icon-themes.patch"
     },
     {
       "type": "script",

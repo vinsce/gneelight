@@ -5,29 +5,29 @@ Written in Python and GTK+ 3 using the [Yeelight Python](https://github.com/skor
 
 ## Installation
 
-### Install using Flatpack (recommended)
+### Install using Flatpak (recommended)
 The simplest way to install Gneelight is by using the provided Flatpak package:
 ```bash
-wget https://github.com/vinsce/gneelight/blob/master/flatpak/gneelight.flatpak?raw=true -O gneelight.flatpak
+wget https://github.com/vinsce/gneelight/releases/latest/download/gneelight.flatpak -O gneelight.flatpak
 flatpak install --user gneelight.flatpak
 ```
 
 #### Troubleshooting
-If you receive the following error `The application me.vinsce.Gneelight/x86_64/master requires the runtime org.gnome.Platform/x86_64/3.38 which was not found` while installing, make sure you have the Flathub repository and the Gnome runtime installed:
+If you receive the following error `The application me.vinsce.Gneelight/x86_64/master requires the runtime org.gnome.Platform/x86_64/40 which was not found` while installing, make sure you have the Flathub repository and the Gnome runtime installed:
 ```bash
-flatpak --user remote-add --from flathub https://flathub.org/repo/flathub.flatpakrepo
-flatpak --user install flathub org.gnome.Platform//3.38
+flatpak --user remote-add --if-not-exists --from flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak --user install flathub org.gnome.Platform//40
 ```
 
-### Install from source
-If you want to install from the source code, first make sure you have the following dependencies installed:
+### Run from source (advanced)
+If you want to run directly from the source code, first make sure you have the following dependencies installed:
 - `AppIndicator3` Library
-- `yeelight` python package
+- Python packages listed in the [requirements](requirements.txt) file
 
 In Ubuntu, you can install the dependencies using:
 ```
 sudo apt-get install gir1.2-appindicator3-0.1
-pip install yeelight
+pip install -r requirements.txt
 ```
 
 then clone this repository and start using Gneelignt:

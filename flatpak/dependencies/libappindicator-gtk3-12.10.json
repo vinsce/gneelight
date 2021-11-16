@@ -9,7 +9,7 @@
     "--disable-gtk-doc",
     "--disable-tests",
     "--disable-mono-tests",
-    "--enable-introspection=yes",
+    "--enable-introspection=no",
     "--with-gtk=3"
   ],
   "cleanup": [
@@ -27,15 +27,19 @@
     },
     {
       "type": "patch",
-      "path": "libappindicator-ftbfs.patch"
+      "path": "../shared-modules/libappindicator/libappindicator-ftbfs.patch"
     },
     {
       "type": "patch",
-      "path": "libappindicator-no-python.patch"
+      "path": "../shared-modules/libappindicator/libappindicator-no-python.patch"
     },
     {
       "type": "patch",
-      "path": "libappindicator-fix-crash-from-incorrect-signal-emission.patch"
+      "path": "../shared-modules/libappindicator/libappindicator-fix-crash-from-incorrect-signal-emission.patch"
+    },
+    {
+      "type": "patch",
+      "path": "../shared-modules/libappindicator/libappindicator-fix-crash-iterating-icon-themes.patch"
     },
     {
       "type": "script",
@@ -44,8 +48,8 @@
     }
   ],
   "modules": [
-    "intltool-0.51.json",
-    "dbus-glib-0.110.json",
+    "../shared-modules/intltool/intltool-0.51.json",
+    "../shared-modules/dbus-glib/dbus-glib.json",
     {
       "name": "libdbusmenu",
       "build-options": {
@@ -68,7 +72,7 @@
       "config-opts": [
         "--disable-static",
         "--disable-gtk-doc",
-        "--enable-introspection=yes",
+        "--enable-introspection=no",
         "--disable-vala",
         "--disable-dumper",
         "--disable-tests",

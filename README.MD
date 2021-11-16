@@ -8,7 +8,7 @@ Written in Python and GTK+ 3 using the [Yeelight Python](https://github.com/skor
 ### Install using Flatpak (recommended)
 The simplest way to install Gneelight is by using the provided Flatpak package:
 ```bash
-wget https://github.com/vinsce/gneelight/blob/master/flatpak/gneelight.flatpak?raw=true -O gneelight.flatpak
+wget https://github.com/vinsce/gneelight/releases/latest/download/gneelight.flatpak -O gneelight.flatpak
 flatpak install --user gneelight.flatpak
 ```
 
@@ -19,10 +19,10 @@ flatpak --user remote-add --if-not-exists --from flathub https://flathub.org/rep
 flatpak --user install flathub org.gnome.Platform//40
 ```
 
-### Install from source
-If you want to install from the source code, first make sure you have the following dependencies installed:
+### Run from source (advanced)
+If you want to run directly from the source code, first make sure you have the following dependencies installed:
 - `AppIndicator3` Library
-- `yeelight` python package
+- Python packages listed in the [requirements](requirements.txt) file
 
 In Ubuntu, you can install the dependencies using:
 ```

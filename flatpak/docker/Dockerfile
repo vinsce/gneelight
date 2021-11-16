@@ -1,3 +1,5 @@
+# Docker container to simulate GitHub flatbuild workflow
+
 FROM ubuntu:latest
 
 RUN apt-get update && \
@@ -10,7 +12,7 @@ RUN flatpak remote-add --if-not-exists --from flathub https://flathub.org/repo/f
 RUN cd /opt \
     && git clone https://github.com/vinsce/gneelight.git \
     && cd gneelight \
-    && git checkout feature/github-actions \
+    && git checkout master \
     && git submodule update --init
 
 WORKDIR /opt/gneelight/

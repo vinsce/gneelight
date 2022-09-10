@@ -1,2 +1,2 @@
 yeelight==0.4.3
-PyGObject==3.40
+PyGObject==3.42

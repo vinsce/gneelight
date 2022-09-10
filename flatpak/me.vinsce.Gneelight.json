@@ -1,7 +1,7 @@
 {
   "app-id": "me.vinsce.Gneelight",
   "runtime": "org.gnome.Platform",
-  "runtime-version": "40",
+  "runtime-version": "42",
   "sdk": "org.gnome.Sdk",
   "command": "/app/bin/runner.sh",
   "finish-args": [
@@ -15,7 +15,7 @@
     "--env=GSETTINGS_SCHEMA_DIR=/app/share/glib-2.0/schemas"
   ],
   "modules": [
-    "./dependencies/libappindicator-gtk3-12.10.json",
+    "./shared-modules/libappindicator/libappindicator-gtk3-introspection-12.10.json",
     "./dependencies/python3-yeelight.json",
     "./dependencies/python3-PyGObject.json",
     {

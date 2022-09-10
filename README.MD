@@ -13,10 +13,10 @@ flatpak install --user gneelight.flatpak
 ```
 
 #### Troubleshooting
-If you receive the following error `The application me.vinsce.Gneelight/x86_64/master requires the runtime org.gnome.Platform/x86_64/40 which was not found` while installing, make sure you have the Flathub repository and the Gnome runtime installed:
+If you receive the following error `The application me.vinsce.Gneelight/x86_64/master requires the runtime org.gnome.Platform/x86_64/42 which was not found` while installing, make sure you have the Flathub repository and the Gnome runtime installed:
 ```bash
 flatpak --user remote-add --if-not-exists --from flathub https://flathub.org/repo/flathub.flatpakrepo
-flatpak --user install flathub org.gnome.Platform//40
+flatpak --user install flathub org.gnome.Platform//42
 ```
 
 ### Run from source (advanced)
